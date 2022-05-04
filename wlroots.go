@@ -1,4 +1,4 @@
-package wlroots
+package wlr
 
 // #include <stdarg.h>
 // #include <stdio.h>
