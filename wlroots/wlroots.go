@@ -68,7 +68,7 @@ import (
 	"time"
 	"unsafe"
 
-	"github.com/swaywm/go-wlroots/xkb"
+	"deedles.dev/wlr/xkb"
 
 	"golang.org/x/sys/unix"
 )
