@@ -1,5 +1,7 @@
 package xkb
 
+//go:generate go run ./internal/symsgen syms.go
+
 // #include <stdlib.h>
 // #include <xkbcommon/xkbcommon.h>
 // #cgo pkg-config: xkbcommon
