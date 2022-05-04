@@ -1,5 +1,6 @@
 package wlr
 
+// #include <wlr/backend.h>
 // #include <wlr/types/wlr_xdg_shell.h>
 //
 // void _wlr_xdg_surface_for_each_cb(struct wlr_surface *surface, int sx, int sy, void *data);
@@ -23,27 +24,14 @@ const (
 )
 
 var (
-	// TODO: guard this with a mutex
 	xdgSurfaceWalkers      = map[*C.struct_wlr_xdg_surface]XDGSurfaceWalkFunc{}
 	xdgSurfaceWalkersMutex sync.RWMutex
 )
 
-type XDGShell struct {
-	p *C.struct_wlr_xdg_shell
-}
-
-type XDGSurface struct {
-	p *C.struct_wlr_xdg_surface
-}
-
-type XDGPopup struct {
-	p *C.struct_wlr_xdg_popup
-}
-
 type XDGSurfaceWalkFunc func(surface Surface, sx int, sy int)
 
-type XDGTopLevel struct {
-	p *C.struct_wlr_xdg_toplevel
+type XDGShell struct {
+	p *C.struct_wlr_xdg_shell
 }
 
 func NewXDGShell(display Display) XDGShell {
@@ -70,6 +58,10 @@ func (s XDGShell) OnNewSurface(cb func(XDGSurface)) {
 		})
 		cb(surface)
 	})
+}
+
+type XDGSurface struct {
+	p *C.struct_wlr_xdg_surface
 }
 
 func (s XDGSurface) Nil() bool {
@@ -165,6 +157,14 @@ func (s XDGSurface) Geometry() Box {
 	var b Box
 	b.fromC(&cb)
 	return b
+}
+
+type XDGPopup struct {
+	p *C.struct_wlr_xdg_popup
+}
+
+type XDGTopLevel struct {
+	p *C.struct_wlr_xdg_toplevel
 }
 
 func (t XDGTopLevel) OnRequestMove(cb func(client SeatClient, serial uint32)) {
