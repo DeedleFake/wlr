@@ -54,9 +54,9 @@ func NewServer() (*Server, error) {
 	// create backend
 	s.backend = wlroots.NewBackend(s.display)
 	s.backend.OnNewOutput(s.handleNewOutput)
-
 	s.backend.OnNewInput(s.handleNewInput)
-	s.renderer = s.backend.Renderer()
+
+	s.renderer = wlroots.NewRenderer(s.backend)
 	s.renderer.InitDisplay(s.display)
 
 	// create compositor and data device manager interfaces

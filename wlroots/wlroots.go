@@ -638,6 +638,12 @@ type Renderer struct {
 	p *C.struct_wlr_renderer
 }
 
+func NewRenderer(backend Backend) Renderer {
+	p := C.wlr_renderer_autocreate(backend.p)
+	man.track(unsafe.Pointer(p), &p.events.destroy)
+	return Renderer{p: p}
+}
+
 func (r Renderer) Destroy() {
 	C.wlr_renderer_destroy(r.p)
 }
@@ -696,7 +702,7 @@ func (o Output) OnDestroy(cb func(Output)) {
 }
 
 func (o Output) Name() string {
-	return C.GoString(&o.p.name[0])
+	return C.GoString(o.p.name)
 }
 
 func (o Output) Scale() float32 {
@@ -1367,12 +1373,6 @@ func (b Backend) OnNewInput(cb func(InputDevice)) {
 		})
 		cb(dev)
 	})
-}
-
-func (b Backend) Renderer() Renderer {
-	p := C.wlr_backend_get_renderer(b.p)
-	man.track(unsafe.Pointer(p), &p.events.destroy)
-	return Renderer{p: p}
 }
 
 // This whole mess has to exist for a number of reasons:
