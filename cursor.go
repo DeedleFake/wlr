@@ -5,7 +5,10 @@ package wlr
 // #include <wlr/types/wlr_pointer.h>
 import "C"
 
-import "unsafe"
+import (
+	"time"
+	"unsafe"
+)
 
 type Cursor struct {
 	p *C.struct_wlr_cursor
@@ -49,11 +52,11 @@ func (c *Cursor) SetSurface(surface Surface, hotspotX int32, hotspotY int32) {
 	C.wlr_cursor_set_surface(c.p, surface.p, C.int32_t(hotspotX), C.int32_t(hotspotY))
 }
 
-func (c *Cursor) OnMotion(cb func(dev *InputDevice, time uint32, dx, dy float64)) func() {
+func (c *Cursor) OnMotion(cb func(dev *InputDevice, time time.Time, dx, dy float64)) func() {
 	lis := newListener(unsafe.Pointer(c.p), func(lis *wlrlis, data unsafe.Pointer) {
 		event := (*C.struct_wlr_event_pointer_motion)(data)
 		dev := &InputDevice{p: event.device}
-		cb(dev, uint32(event.time_msec), float64(event.delta_x), float64(event.delta_y))
+		cb(dev, time.UnixMilli(int64(event.time_msec)), float64(event.delta_x), float64(event.delta_y))
 	})
 	C.wl_signal_add(&c.p.events.motion, lis)
 	return func() {
@@ -61,11 +64,11 @@ func (c *Cursor) OnMotion(cb func(dev *InputDevice, time uint32, dx, dy float64)
 	}
 }
 
-func (c *Cursor) OnMotionAbsolute(cb func(dev *InputDevice, time uint32, x, y float64)) func() {
+func (c *Cursor) OnMotionAbsolute(cb func(dev *InputDevice, time time.Time, x, y float64)) func() {
 	lis := newListener(unsafe.Pointer(c.p), func(lis *wlrlis, data unsafe.Pointer) {
 		event := (*C.struct_wlr_event_pointer_motion_absolute)(data)
 		dev := &InputDevice{p: event.device}
-		cb(dev, uint32(event.time_msec), float64(event.x), float64(event.y))
+		cb(dev, time.UnixMilli(int64(event.time_msec)), float64(event.x), float64(event.y))
 	})
 	C.wl_signal_add(&c.p.events.motion_absolute, lis)
 	return func() {
@@ -73,11 +76,11 @@ func (c *Cursor) OnMotionAbsolute(cb func(dev *InputDevice, time uint32, x, y fl
 	}
 }
 
-func (c *Cursor) OnButton(cb func(dev *InputDevice, time uint32, button uint32, state ButtonState)) func() {
+func (c *Cursor) OnButton(cb func(dev *InputDevice, time time.Time, button uint32, state ButtonState)) func() {
 	lis := newListener(unsafe.Pointer(c.p), func(lis *wlrlis, data unsafe.Pointer) {
 		event := (*C.struct_wlr_event_pointer_button)(data)
 		dev := &InputDevice{p: event.device}
-		cb(dev, uint32(event.time_msec), uint32(event.button), ButtonState(event.state))
+		cb(dev, time.UnixMilli(int64(event.time_msec)), uint32(event.button), ButtonState(event.state))
 	})
 	C.wl_signal_add(&c.p.events.button, lis)
 	return func() {
@@ -85,13 +88,13 @@ func (c *Cursor) OnButton(cb func(dev *InputDevice, time uint32, button uint32, 
 	}
 }
 
-func (c *Cursor) OnAxis(cb func(dev *InputDevice, time uint32, source AxisSource, orientation AxisOrientation, delta float64, deltaDiscrete int32)) func() {
+func (c *Cursor) OnAxis(cb func(dev *InputDevice, time time.Time, source AxisSource, orientation AxisOrientation, delta float64, deltaDiscrete int32)) func() {
 	lis := newListener(unsafe.Pointer(c.p), func(lis *wlrlis, data unsafe.Pointer) {
 		event := (*C.struct_wlr_event_pointer_axis)(data)
 		dev := &InputDevice{p: event.device}
 		cb(
 			dev,
-			uint32(event.time_msec),
+			time.UnixMilli(int64(event.time_msec)),
 			AxisSource(event.source),
 			AxisOrientation(event.orientation),
 			float64(event.delta),

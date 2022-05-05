@@ -7,6 +7,7 @@ import "C"
 
 import (
 	"fmt"
+	"time"
 	"unsafe"
 
 	"deedles.dev/wlr/xkb"
@@ -65,10 +66,10 @@ func (k *Keyboard) OnModifiers(cb func(keyboard *Keyboard)) func() {
 	}
 }
 
-func (k *Keyboard) OnKey(cb func(keyboard *Keyboard, time uint32, keyCode uint32, updateState bool, state KeyState)) func() {
+func (k *Keyboard) OnKey(cb func(keyboard *Keyboard, time time.Time, keyCode uint32, updateState bool, state KeyState)) func() {
 	lis := newListener(unsafe.Pointer(k.p), func(lis *wlrlis, data unsafe.Pointer) {
 		event := (*C.struct_wlr_event_keyboard_key)(data)
-		cb(k, uint32(event.time_msec), uint32(event.keycode), bool(event.update_state), KeyState(event.state))
+		cb(k, time.UnixMilli(int64(event.time_msec)), uint32(event.keycode), bool(event.update_state), KeyState(event.state))
 	})
 	C.wl_signal_add(&k.p.events.key, lis)
 	return func() {
