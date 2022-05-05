@@ -165,3 +165,16 @@ func (m OutputMode) Height() int32 {
 func (m OutputMode) RefreshRate() int32 {
 	return int32(m.p.refresh)
 }
+
+type OutputTransform int
+
+const (
+	OutputTransformNormal OutputTransform = iota
+	OutputTransform90
+	OutputTransform180
+	OutputTransform270
+	OutputTransformFlipped
+	OutputTransformFlipped90
+	OutputTransformFlipped180
+	OutputTransformFlipped270
+)
