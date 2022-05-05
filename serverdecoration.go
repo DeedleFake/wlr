@@ -21,42 +21,58 @@ type ServerDecoration struct {
 	p *C.struct_wlr_server_decoration
 }
 
-func NewServerDecorationManager(display Display) ServerDecorationManager {
+func NewServerDecorationManager(display *Display) *ServerDecorationManager {
 	p := C.wlr_server_decoration_manager_create(display.p)
-	man.track(unsafe.Pointer(p), &p.events.destroy)
-	return ServerDecorationManager{p: p}
+	trackObject(unsafe.Pointer(p), &p.events.destroy)
+	return &ServerDecorationManager{p: p}
 }
 
-func (m ServerDecorationManager) OnDestroy(cb func(ServerDecorationManager)) {
-	man.add(unsafe.Pointer(m.p), &m.p.events.destroy, func(unsafe.Pointer) {
+func (m *ServerDecorationManager) OnDestroy(cb func(*ServerDecorationManager)) func() {
+	lis := newListener(unsafe.Pointer(m.p), func(lis *wlrlis, data unsafe.Pointer) {
 		cb(m)
 	})
+	C.wl_signal_add(&m.p.events.destroy, lis)
+	return func() {
+		removeListener(lis)
+	}
 }
 
 func (m ServerDecorationManager) SetDefaultMode(mode ServerDecorationManagerMode) {
 	C.wlr_server_decoration_manager_set_default_mode(m.p, C.uint32_t(mode))
 }
 
-func (m ServerDecorationManager) OnNewMode(cb func(ServerDecorationManager, ServerDecoration)) {
-	man.add(unsafe.Pointer(m.p), &m.p.events.new_decoration, func(data unsafe.Pointer) {
-		dec := ServerDecoration{
+func (m *ServerDecorationManager) OnNewMode(cb func(*ServerDecorationManager, *ServerDecoration)) func() {
+	lis := newListener(unsafe.Pointer(m.p), func(lis *wlrlis, data unsafe.Pointer) {
+		dec := &ServerDecoration{
 			p: (*C.struct_wlr_server_decoration)(data),
 		}
-		man.track(unsafe.Pointer(dec.p), &dec.p.events.destroy)
+		trackObject(unsafe.Pointer(dec.p), &dec.p.events.destroy)
 		cb(m, dec)
 	})
+	C.wl_signal_add(&m.p.events.new_decoration, lis)
+	return func() {
+		removeListener(lis)
+	}
 }
 
-func (d ServerDecoration) OnDestroy(cb func(ServerDecoration)) {
-	man.add(unsafe.Pointer(d.p), &d.p.events.destroy, func(unsafe.Pointer) {
+func (d *ServerDecoration) OnDestroy(cb func(*ServerDecoration)) func() {
+	lis := newListener(unsafe.Pointer(d.p), func(lis *wlrlis, data unsafe.Pointer) {
 		cb(d)
 	})
+	C.wl_signal_add(&d.p.events.destroy, lis)
+	return func() {
+		removeListener(lis)
+	}
 }
 
-func (d ServerDecoration) OnMode(cb func(ServerDecoration)) {
-	man.add(unsafe.Pointer(d.p), &d.p.events.mode, func(unsafe.Pointer) {
+func (d *ServerDecoration) OnMode(cb func(*ServerDecoration)) func() {
+	lis := newListener(unsafe.Pointer(d.p), func(lis *wlrlis, data unsafe.Pointer) {
 		cb(d)
 	})
+	C.wl_signal_add(&d.p.events.mode, lis)
+	return func() {
+		removeListener(lis)
+	}
 }
 
 func (d ServerDecoration) Mode() ServerDecorationManagerMode {

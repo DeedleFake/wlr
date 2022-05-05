@@ -32,10 +32,14 @@ func (s Surface) Nil() bool {
 	return s.p == nil
 }
 
-func (s Surface) OnDestroy(cb func(Surface)) {
-	man.add(unsafe.Pointer(s.p), &s.p.events.destroy, func(unsafe.Pointer) {
+func (s *Surface) OnDestroy(cb func(*Surface)) func() {
+	lis := newListener(unsafe.Pointer(s.p), func(lis *wlrlis, data unsafe.Pointer) {
 		cb(s)
 	})
+	C.wl_signal_add(&s.p.events.destroy, lis)
+	return func() {
+		removeListener(lis)
+	}
 }
 
 func (s Surface) Type() SurfaceType {

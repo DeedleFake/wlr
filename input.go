@@ -35,37 +35,45 @@ type Keyboard struct {
 	p *C.struct_wlr_keyboard
 }
 
-func (k Keyboard) SetKeymap(keymap xkb.Keymap) {
+func (k *Keyboard) SetKeymap(keymap xkb.Keymap) {
 	C.wlr_keyboard_set_keymap(k.p, (*C.struct_xkb_keymap)(keymap.Ptr()))
 }
 
-func (k Keyboard) RepeatInfo() (rate int32, delay int32) {
+func (k *Keyboard) RepeatInfo() (rate int32, delay int32) {
 	return int32(k.p.repeat_info.rate), int32(k.p.repeat_info.delay)
 }
 
-func (k Keyboard) SetRepeatInfo(rate int32, delay int32) {
+func (k *Keyboard) SetRepeatInfo(rate int32, delay int32) {
 	C.wlr_keyboard_set_repeat_info(k.p, C.int32_t(rate), C.int32_t(delay))
 }
 
-func (k Keyboard) XKBState() xkb.State {
+func (k *Keyboard) XKBState() xkb.State {
 	return xkb.WrapState(unsafe.Pointer(k.p.xkb_state))
 }
 
-func (k Keyboard) Modifiers() KeyboardModifier {
+func (k *Keyboard) Modifiers() KeyboardModifier {
 	return KeyboardModifier(C.wlr_keyboard_get_modifiers(k.p))
 }
 
-func (k Keyboard) OnModifiers(cb func(keyboard Keyboard)) {
-	man.add(unsafe.Pointer(k.p), &k.p.events.modifiers, func(data unsafe.Pointer) {
+func (k *Keyboard) OnModifiers(cb func(keyboard *Keyboard)) func() {
+	lis := newListener(unsafe.Pointer(k.p), func(lis *wlrlis, data unsafe.Pointer) {
 		cb(k)
 	})
+	C.wl_signal_add(&k.p.events.modifiers, lis)
+	return func() {
+		removeListener(lis)
+	}
 }
 
-func (k Keyboard) OnKey(cb func(keyboard Keyboard, time uint32, keyCode uint32, updateState bool, state KeyState)) {
-	man.add(unsafe.Pointer(k.p), &k.p.events.key, func(data unsafe.Pointer) {
+func (k *Keyboard) OnKey(cb func(keyboard *Keyboard, time uint32, keyCode uint32, updateState bool, state KeyState)) func() {
+	lis := newListener(unsafe.Pointer(k.p), func(lis *wlrlis, data unsafe.Pointer) {
 		event := (*C.struct_wlr_event_keyboard_key)(data)
 		cb(k, uint32(event.time_msec), uint32(event.keycode), bool(event.update_state), KeyState(event.state))
 	})
+	C.wl_signal_add(&k.p.events.key, lis)
+	return func() {
+		removeListener(lis)
+	}
 }
 
 type (
@@ -106,21 +114,25 @@ type InputDevice struct {
 	p *C.struct_wlr_input_device
 }
 
-func (d InputDevice) OnDestroy(cb func(InputDevice)) {
-	man.add(unsafe.Pointer(d.p), &d.p.events.destroy, func(unsafe.Pointer) {
+func (d *InputDevice) OnDestroy(cb func(*InputDevice)) func() {
+	lis := newListener(unsafe.Pointer(d.p), func(lis *wlrlis, data unsafe.Pointer) {
 		cb(d)
 	})
+	C.wl_signal_add(&d.p.events.destroy, lis)
+	return func() {
+		removeListener(lis)
+	}
 }
 
-func (d InputDevice) Type() InputDeviceType { return InputDeviceType(d.p._type) }
-func (d InputDevice) Vendor() int           { return int(d.p.vendor) }
-func (d InputDevice) Product() int          { return int(d.p.product) }
-func (d InputDevice) Name() string          { return C.GoString(d.p.name) }
-func (d InputDevice) Width() float64        { return float64(d.p.width_mm) }
-func (d InputDevice) Height() float64       { return float64(d.p.height_mm) }
-func (d InputDevice) OutputName() string    { return C.GoString(d.p.output_name) }
+func (d *InputDevice) Type() InputDeviceType { return InputDeviceType(d.p._type) }
+func (d *InputDevice) Vendor() int           { return int(d.p.vendor) }
+func (d *InputDevice) Product() int          { return int(d.p.product) }
+func (d *InputDevice) Name() string          { return C.GoString(d.p.name) }
+func (d *InputDevice) Width() float64        { return float64(d.p.width_mm) }
+func (d *InputDevice) Height() float64       { return float64(d.p.height_mm) }
+func (d *InputDevice) OutputName() string    { return C.GoString(d.p.output_name) }
 
-func validateInputDeviceType(d InputDevice, fn string, req InputDeviceType) {
+func validateInputDeviceType(d *InputDevice, fn string, req InputDeviceType) {
 	if typ := d.Type(); typ != req {
 		if int(typ) >= len(inputDeviceNames) {
 			panic(fmt.Sprintf("%s called on input device of type %d", fn, typ))
@@ -130,12 +142,8 @@ func validateInputDeviceType(d InputDevice, fn string, req InputDeviceType) {
 	}
 }
 
-func (d InputDevice) Keyboard() Keyboard {
+func (d *InputDevice) Keyboard() *Keyboard {
 	validateInputDeviceType(d, "Keyboard", InputDeviceTypeKeyboard)
 	p := *(*unsafe.Pointer)(unsafe.Pointer(&d.p.anon0[0]))
-	return Keyboard{p: (*C.struct_wlr_keyboard)(p)}
-}
-
-func wrapInputDevice(p unsafe.Pointer) InputDevice {
-	return InputDevice{p: (*C.struct_wlr_input_device)(p)}
+	return &Keyboard{p: (*C.struct_wlr_keyboard)(p)}
 }

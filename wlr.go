@@ -33,17 +33,19 @@ package wlr
 // 	wlr_log_init(verbosity, is_set ? &_wlr_log_inner_cb : NULL);
 // }
 //
-// void _wl_listener_cb(struct wl_listener *listener, void *data);
+// extern void _listener_callback(struct wl_listener *listener, void *data);
 //
-// static inline void _wl_listener_set_cb(struct wl_listener *listener) {
-// 	listener->notify = &_wl_listener_cb;
+// static inline void _set_listener_callback(struct wl_listener *listener) {
+// 	listener->notify = _listener_callback;
 // }
 import "C"
 
 import (
-	"sync"
+	"fmt"
 	"time"
 	"unsafe"
+
+	"deedles.dev/wlr/internal/util"
 )
 
 type Edges uint32
@@ -124,34 +126,41 @@ type DMABuf struct {
 	p *C.struct_wlr_linux_dmabuf_v1
 }
 
-func NewDMABuf(display Display, renderer Renderer) DMABuf {
+func NewDMABuf(display *Display, renderer *Renderer) *DMABuf {
 	p := C.wlr_linux_dmabuf_v1_create(display.p, renderer.p)
-	man.track(unsafe.Pointer(p), &p.events.destroy)
-	return DMABuf{p: p}
+	trackObject(unsafe.Pointer(p), &p.events.destroy)
+	return &DMABuf{p: p}
 }
 
-func (b DMABuf) OnDestroy(cb func(DMABuf)) {
-	man.add(unsafe.Pointer(b.p), &b.p.events.destroy, func(unsafe.Pointer) {
+func (b *DMABuf) OnDestroy(cb func(*DMABuf)) func() {
+	lis := newListener(unsafe.Pointer(b.p), func(lis *wlrlis, data unsafe.Pointer) {
 		cb(b)
 	})
+	C.wl_signal_add(&b.p.events.destroy, lis)
+	return func() {
+		removeListener(lis)
+	}
 }
 
 type EventLoop struct {
 	p *C.struct_wl_event_loop
 }
 
-func (evl EventLoop) OnDestroy(cb func(EventLoop)) {
-	l := man.add(unsafe.Pointer(evl.p), nil, func(data unsafe.Pointer) {
+func (evl *EventLoop) OnDestroy(cb func(*EventLoop)) func() {
+	lis := newListener(unsafe.Pointer(evl.p), func(lis *wlrlis, data unsafe.Pointer) {
 		cb(evl)
 	})
-	C.wl_event_loop_add_destroy_listener(evl.p, l.p)
+	C.wl_event_loop_add_destroy_listener(evl.p, lis)
+	return func() {
+		removeListener(lis)
+	}
 }
 
-func (evl EventLoop) Fd() uintptr {
+func (evl *EventLoop) Fd() uintptr {
 	return uintptr(C.wl_event_loop_get_fd(evl.p))
 }
 
-func (evl EventLoop) Dispatch(timeout time.Duration) {
+func (evl *EventLoop) Dispatch(timeout time.Duration) {
 	var d int
 	if timeout >= 0 {
 		d = int(timeout / time.Millisecond)
@@ -165,32 +174,40 @@ type DataDeviceManager struct {
 	p *C.struct_wlr_data_device_manager
 }
 
-func NewDataDeviceManager(display Display) DataDeviceManager {
+func NewDataDeviceManager(display *Display) *DataDeviceManager {
 	p := C.wlr_data_device_manager_create(display.p)
-	man.track(unsafe.Pointer(p), &p.events.destroy)
-	return DataDeviceManager{p: p}
+	trackObject(unsafe.Pointer(p), &p.events.destroy)
+	return &DataDeviceManager{p: p}
 }
 
-func (m DataDeviceManager) OnDestroy(cb func(DataDeviceManager)) {
-	man.add(unsafe.Pointer(m.p), &m.p.events.destroy, func(unsafe.Pointer) {
+func (m *DataDeviceManager) OnDestroy(cb func(*DataDeviceManager)) func() {
+	lis := newListener(unsafe.Pointer(m.p), func(lis *wlrlis, data unsafe.Pointer) {
 		cb(m)
 	})
+	C.wl_signal_add(&m.p.events.destroy, lis)
+	return func() {
+		removeListener(lis)
+	}
 }
 
 type Compositor struct {
 	p *C.struct_wlr_compositor
 }
 
-func NewCompositor(display Display, renderer Renderer) Compositor {
+func NewCompositor(display *Display, renderer *Renderer) *Compositor {
 	p := C.wlr_compositor_create(display.p, renderer.p)
-	man.track(unsafe.Pointer(p), &p.events.destroy)
-	return Compositor{p: p}
+	trackObject(unsafe.Pointer(p), &p.events.destroy)
+	return &Compositor{p: p}
 }
 
-func (c Compositor) OnDestroy(cb func(Compositor)) {
-	man.add(unsafe.Pointer(c.p), &c.p.events.destroy, func(unsafe.Pointer) {
+func (c *Compositor) OnDestroy(cb func(*Compositor)) func() {
+	lis := newListener(unsafe.Pointer(c.p), func(lis *wlrlis, data unsafe.Pointer) {
 		cb(c)
 	})
+	C.wl_signal_add(&c.p.events.destroy, lis)
+	return func() {
+		removeListener(lis)
+	}
 }
 
 type Color struct {
@@ -240,112 +257,55 @@ func (b *Box) fromC(cb *C.struct_wlr_box) {
 	b.Height = int(cb.height)
 }
 
-// This whole mess has to exist for a number of reasons:
-//
-// 1. We need to allocate all instances of wl_listener on the heap as storing Go
-// pointers in C after a cgo call returns is not allowed.
-//
-// 2. The wlroots library implicitly destroys objects when wl_display is
-// destroyed. So, we need to keep track of all objects (and their listeners)
-// manually and listen for the destroy signal to be able to free everything.
-//
-// 3 (TODO). As we're keeping track of all objects anyway, we might as well
-// store a Go pointer to the wrapper struct along with them in order to be able
-// to pass the same Go pointer through callbacks every time. This will also
-// allow calling runtime.SetFinalizer on some of them to clean them up early
-// when the GC notices it has gone out of scope.
-//
-// Send help.
-//
-// TODO: Is it possible to clean this up with cgo.Handle, perhaps?
+type wlrlis = C.struct_wl_listener
 
-type listenerCallback func(data unsafe.Pointer)
+var cbs util.SMap[*wlrlis, callback]
 
-type manager struct {
-	mutex     sync.RWMutex
-	objects   map[unsafe.Pointer][]*listener
-	listeners map[*C.struct_wl_listener]*listener
+type callback struct {
+	obj unsafe.Pointer
+	cb  callbackFunc
 }
 
-type listener struct {
-	p   *C.struct_wl_listener
-	s   *C.struct_wl_signal
-	cbs []listenerCallback
+type callbackFunc func(lis *wlrlis, data unsafe.Pointer)
+
+func newListener(obj unsafe.Pointer, cb callbackFunc) *wlrlis {
+	lis := (*wlrlis)(C.malloc(C.sizeof_struct_wl_listener))
+	C._set_listener_callback(lis)
+	cbs.Store(lis, callback{obj, cb})
+	return lis
 }
 
-var (
-	man = &manager{
-		objects:   make(map[unsafe.Pointer][]*listener),
-		listeners: make(map[*C.struct_wl_listener]*listener),
-	}
-)
+func removeListener(lis *wlrlis) {
+	cbs.Delete(lis)
+	C.wl_list_remove(&lis.link)
+	C.free(unsafe.Pointer(lis))
+}
 
-//export _wl_listener_cb
-func _wl_listener_cb(listener *C.struct_wl_listener, data unsafe.Pointer) {
-	man.mutex.RLock()
-	l := man.listeners[listener]
-	man.mutex.RUnlock()
-	for _, cb := range l.cbs {
-		cb(data)
+func trackObject(p unsafe.Pointer, sig *C.struct_wl_signal) func() {
+	lis := newListener(p, func(lis *wlrlis, data unsafe.Pointer) {
+		removeObject(unsafe.Pointer(p))
+	})
+	C.wl_signal_add(sig, lis)
+	return func() {
+		removeListener(lis)
 	}
 }
 
-func (m *manager) add(p unsafe.Pointer, signal *C.struct_wl_signal, cb listenerCallback) *listener {
-	m.mutex.Lock()
-	defer m.mutex.Unlock()
-
-	// if a listener for this object and signal already exists, add the callback
-	// to the existing listener
-	if signal != nil {
-		for _, l := range m.objects[p] {
-			if l.s != nil && l.s == signal {
-				l.cbs = append(l.cbs, cb)
-				return l
-			}
+func removeObject(obj unsafe.Pointer) {
+	cbs.Range(func(lis *wlrlis, cb callback) bool {
+		if cb.obj != obj {
+			return true
 		}
-	}
-
-	lp := (*C.struct_wl_listener)(C.calloc(C.sizeof_struct_wl_listener, 1))
-	C._wl_listener_set_cb(lp)
-	if signal != nil {
-		C.wl_signal_add((*C.struct_wl_signal)(signal), lp)
-	}
-
-	l := &listener{
-		p:   lp,
-		s:   signal,
-		cbs: []listenerCallback{cb},
-	}
-	m.listeners[lp] = l
-	m.objects[p] = append(m.objects[p], l)
-
-	return l
+		removeListener(lis)
+		return true
+	})
 }
 
-func (m *manager) has(p unsafe.Pointer) bool {
-	m.mutex.RLock()
-	_, found := m.objects[p]
-	m.mutex.RUnlock()
-	return found
-}
-
-func (m *manager) delete(p unsafe.Pointer) {
-	m.mutex.Lock()
-	defer m.mutex.Unlock()
-
-	for _, l := range m.objects[p] {
-		delete(m.listeners, l.p)
-
-		// remove the listener from the signal
-		C.wl_list_remove(&l.p.link)
-
-		// free the listener
-		C.free(unsafe.Pointer(l.p))
+//export _listener_callback
+func _listener_callback(lis *wlrlis, data unsafe.Pointer) {
+	cb, ok := cbs.Load(lis)
+	if !ok {
+		panic(fmt.Errorf("no callback found for listener %v with data %v", lis, data))
 	}
-
-	delete(m.objects, p)
-}
-
-func (m *manager) track(p unsafe.Pointer, destroySignal *C.struct_wl_signal) {
-	m.add(p, destroySignal, func(data unsafe.Pointer) { m.delete(p) })
+	cb.cb(lis, data)
 }

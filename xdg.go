@@ -34,20 +34,24 @@ type XDGShell struct {
 	p *C.struct_wlr_xdg_shell
 }
 
-func NewXDGShell(display Display) XDGShell {
+func NewXDGShell(display *Display) *XDGShell {
 	p := C.wlr_xdg_shell_create(display.p)
-	man.track(unsafe.Pointer(p), &p.events.destroy)
-	return XDGShell{p: p}
+	trackObject(unsafe.Pointer(p), &p.events.destroy)
+	return &XDGShell{p: p}
 }
 
-func (s XDGShell) OnDestroy(cb func(XDGShell)) {
-	man.add(unsafe.Pointer(s.p), &s.p.events.destroy, func(unsafe.Pointer) {
+func (s *XDGShell) OnDestroy(cb func(*XDGShell)) func() {
+	lis := newListener(unsafe.Pointer(s.p), func(lis *wlrlis, data unsafe.Pointer) {
 		cb(s)
 	})
+	C.wl_signal_add(&s.p.events.destroy, lis)
+	return func() {
+		removeListener(lis)
+	}
 }
 
-func (s XDGShell) OnNewSurface(cb func(XDGSurface)) {
-	man.add(unsafe.Pointer(s.p), &s.p.events.new_surface, func(data unsafe.Pointer) {
+func (s *XDGShell) OnNewSurface(cb func(*XDGSurface)) func() {
+	lis := newListener(unsafe.Pointer(s.p), func(lis *wlrlis, data unsafe.Pointer) {
 		surface := XDGSurface{p: (*C.struct_wlr_xdg_surface)(data)}
 		man.add(unsafe.Pointer(surface.p), &surface.p.events.destroy, func(data unsafe.Pointer) {
 			man.delete(unsafe.Pointer(surface.p))
@@ -58,6 +62,10 @@ func (s XDGShell) OnNewSurface(cb func(XDGSurface)) {
 		})
 		cb(surface)
 	})
+	C.wl_signal_add(&s.p.events.new_surface, lis)
+	return func() {
+		removeListener(lis)
+	}
 }
 
 type XDGSurface struct {

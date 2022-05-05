@@ -30,31 +30,39 @@ const (
 	SeatCapabilityTouch    SeatCapability = C.WL_SEAT_CAPABILITY_TOUCH
 )
 
-func NewSeat(display Display, name string) Seat {
+func NewSeat(display *Display, name string) *Seat {
 	s := C.CString(name)
 	p := C.wlr_seat_create(display.p, s)
 	C.free(unsafe.Pointer(s))
-	man.track(unsafe.Pointer(p), &p.events.destroy)
-	return Seat{p: p}
+	trackObject(unsafe.Pointer(p), &p.events.destroy)
+	return &Seat{p: p}
 }
 
 func (s Seat) Destroy() {
 	C.wlr_seat_destroy(s.p)
 }
 
-func (s Seat) OnDestroy(cb func(Seat)) {
-	man.add(unsafe.Pointer(s.p), &s.p.events.destroy, func(unsafe.Pointer) {
+func (s *Seat) OnDestroy(cb func(*Seat)) func() {
+	lis := newListener(unsafe.Pointer(s.p), func(lis *wlrlis, data unsafe.Pointer) {
 		cb(s)
 	})
+	C.wl_signal_add(&s.p.events.destroy, lis)
+	return func() {
+		removeListener(lis)
+	}
 }
 
-func (s Seat) OnSetCursorRequest(cb func(client SeatClient, surface Surface, serial uint32, hotspotX int32, hotspotY int32)) {
-	man.add(unsafe.Pointer(s.p), &s.p.events.request_set_cursor, func(data unsafe.Pointer) {
+func (s *Seat) OnSetCursorRequest(cb func(client *SeatClient, surface *Surface, serial uint32, hotspotX int32, hotspotY int32)) func() {
+	lis := newListener(unsafe.Pointer(s.p), func(lis *wlrlis, data unsafe.Pointer) {
 		event := (*C.struct_wlr_seat_pointer_request_set_cursor_event)(data)
-		client := SeatClient{p: event.seat_client}
-		surface := Surface{p: event.surface}
+		client := &SeatClient{p: event.seat_client}
+		surface := &Surface{p: event.surface}
 		cb(client, surface, uint32(event.serial), int32(event.hotspot_x), int32(event.hotspot_y))
 	})
+	C.wl_signal_add(&s.p.events.request_set_cursor, lis)
+	return func() {
+		removeListener(lis)
+	}
 }
 
 func (s Seat) SetCapabilities(caps SeatCapability) {

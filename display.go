@@ -1,6 +1,6 @@
 package wlr
 
-// #include <wayland-server.h>
+// #include <wayland-server-core.h>
 import "C"
 
 import (
@@ -12,24 +12,25 @@ type Display struct {
 	p *C.struct_wl_display
 }
 
-func NewDisplay() Display {
+func NewDisplay() *Display {
 	p := C.wl_display_create()
-	d := Display{p: p}
-	d.OnDestroy(func(Display) {
-		man.delete(unsafe.Pointer(p))
-	})
+	d := &Display{p: p}
+	d.OnDestroy(func(d *Display) { removeObject(unsafe.Pointer(p)) })
 	return d
 }
 
-func (d Display) Destroy() {
+func (d *Display) Destroy() {
 	C.wl_display_destroy(d.p)
 }
 
-func (d Display) OnDestroy(cb func(Display)) {
-	l := man.add(unsafe.Pointer(d.p), nil, func(data unsafe.Pointer) {
+func (d *Display) OnDestroy(cb func(*Display)) func() {
+	lis := newListener(unsafe.Pointer(d.p), func(lis *wlrlis, data unsafe.Pointer) {
 		cb(d)
 	})
-	C.wl_display_add_destroy_listener(d.p, l.p)
+	C.wl_display_add_destroy_listener(d.p, lis)
+	return func() {
+		removeListener(lis)
+	}
 }
 
 func (d Display) Run() {
@@ -40,11 +41,11 @@ func (d Display) Terminate() {
 	C.wl_display_terminate(d.p)
 }
 
-func (d Display) EventLoop() EventLoop {
+func (d Display) EventLoop() *EventLoop {
 	p := C.wl_display_get_event_loop(d.p)
-	evl := EventLoop{p: p}
-	evl.OnDestroy(func(EventLoop) {
-		man.delete(unsafe.Pointer(p))
+	evl := &EventLoop{p: p}
+	evl.OnDestroy(func(*EventLoop) {
+		removeObject(unsafe.Pointer(p))
 	})
 	return evl
 }

@@ -19,14 +19,14 @@ type OutputMode struct {
 	p *C.struct_wlr_output_mode
 }
 
-func wrapOutput(p unsafe.Pointer) Output {
-	return Output{p: (*C.struct_wlr_output)(p)}
-}
-
-func (o Output) OnDestroy(cb func(Output)) {
-	man.add(unsafe.Pointer(o.p), &o.p.events.destroy, func(unsafe.Pointer) {
+func (o *Output) OnDestroy(cb func(*Output)) func() {
+	lis := newListener(unsafe.Pointer(o.p), func(lis *wlrlis, data unsafe.Pointer) {
 		cb(o)
 	})
+	C.wl_signal_add(&o.p.events.destroy, lis)
+	return func() {
+		removeListener(lis)
+	}
 }
 
 func (o Output) Name() string {
@@ -43,10 +43,14 @@ func (o Output) TransformMatrix() Matrix {
 	return matrix
 }
 
-func (o Output) OnFrame(cb func(Output)) {
-	man.add(unsafe.Pointer(o.p), &o.p.events.frame, func(data unsafe.Pointer) {
+func (o *Output) OnFrame(cb func(*Output)) func() {
+	lis := newListener(unsafe.Pointer(o.p), func(lis *wlrlis, data unsafe.Pointer) {
 		cb(o)
 	})
+	C.wl_signal_add(&o.p.events.frame, lis)
+	return func() {
+		removeListener(lis)
+	}
 }
 
 func (o Output) RenderSoftwareCursors() {
@@ -126,10 +130,10 @@ type OutputLayout struct {
 	p *C.struct_wlr_output_layout
 }
 
-func NewOutputLayout() OutputLayout {
+func NewOutputLayout() *OutputLayout {
 	p := C.wlr_output_layout_create()
-	man.track(unsafe.Pointer(p), &p.events.destroy)
-	return OutputLayout{p: p}
+	trackObject(unsafe.Pointer(p), &p.events.destroy)
+	return &OutputLayout{p: p}
 }
 
 func (l OutputLayout) Destroy() {
