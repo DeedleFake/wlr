@@ -52,14 +52,15 @@ func (s *XDGShell) OnDestroy(cb func(*XDGShell)) func() {
 
 func (s *XDGShell) OnNewSurface(cb func(*XDGSurface)) func() {
 	lis := newListener(unsafe.Pointer(s.p), func(lis *wlrlis, data unsafe.Pointer) {
-		surface := XDGSurface{p: (*C.struct_wlr_xdg_surface)(data)}
-		man.add(unsafe.Pointer(surface.p), &surface.p.events.destroy, func(data unsafe.Pointer) {
-			man.delete(unsafe.Pointer(surface.p))
-			man.delete(unsafe.Pointer(surface.TopLevel().p))
-		})
-		man.add(unsafe.Pointer(surface.p.surface), &surface.p.surface.events.destroy, func(data unsafe.Pointer) {
-			man.delete(unsafe.Pointer(surface.p.surface))
-		})
+		surface := &XDGSurface{p: (*C.struct_wlr_xdg_surface)(data)}
+		trackObject(data, &surface.p.events.destroy)
+		//man.add(unsafe.Pointer(surface.p), &surface.p.events.destroy, func(data unsafe.Pointer) {
+		//	man.delete(unsafe.Pointer(surface.p))
+		//	man.delete(unsafe.Pointer(surface.TopLevel().p))
+		//})
+		//man.add(unsafe.Pointer(surface.p.surface), &surface.p.surface.events.destroy, func(data unsafe.Pointer) {
+		//	man.delete(unsafe.Pointer(surface.p.surface))
+		//})
 		cb(surface)
 	})
 	C.wl_signal_add(&s.p.events.new_surface, lis)
@@ -127,35 +128,55 @@ func (s XDGSurface) SurfaceAt(sx float64, sy float64) (surface Surface, subX flo
 	return Surface{p: p}, float64(csubX), float64(csubY)
 }
 
-func (s XDGSurface) OnMap(cb func(XDGSurface)) {
-	man.add(unsafe.Pointer(s.p), &s.p.events._map, func(data unsafe.Pointer) {
+func (s *XDGSurface) OnMap(cb func(*XDGSurface)) func() {
+	lis := newListener(unsafe.Pointer(s.p), func(lis *wlrlis, data unsafe.Pointer) {
 		cb(s)
 	})
+	C.wl_signal_add(&s.p.events._map, lis)
+	return func() {
+		removeListener(lis)
+	}
 }
 
-func (s XDGSurface) OnUnmap(cb func(XDGSurface)) {
-	man.add(unsafe.Pointer(s.p), &s.p.events.unmap, func(data unsafe.Pointer) {
+func (s *XDGSurface) OnUnmap(cb func(*XDGSurface)) func() {
+	lis := newListener(unsafe.Pointer(s.p), func(lis *wlrlis, data unsafe.Pointer) {
 		cb(s)
 	})
+	C.wl_signal_add(&s.p.events.unmap, lis)
+	return func() {
+		removeListener(lis)
+	}
 }
 
-func (s XDGSurface) OnDestroy(cb func(XDGSurface)) {
-	man.add(unsafe.Pointer(s.p), &s.p.events.destroy, func(data unsafe.Pointer) {
+func (s *XDGSurface) OnDestroy(cb func(*XDGSurface)) func() {
+	lis := newListener(unsafe.Pointer(s.p), func(lis *wlrlis, data unsafe.Pointer) {
 		cb(s)
 	})
+	C.wl_signal_add(&s.p.events.destroy, lis)
+	return func() {
+		removeListener(lis)
+	}
 }
 
-func (s XDGSurface) OnPingTimeout(cb func(XDGSurface)) {
-	man.add(unsafe.Pointer(s.p), &s.p.events.ping_timeout, func(data unsafe.Pointer) {
+func (s *XDGSurface) OnPingTimeout(cb func(*XDGSurface)) func() {
+	lis := newListener(unsafe.Pointer(s.p), func(lis *wlrlis, data unsafe.Pointer) {
 		cb(s)
 	})
+	C.wl_signal_add(&s.p.events.ping_timeout, lis)
+	return func() {
+		removeListener(lis)
+	}
 }
 
-func (s XDGSurface) OnNewPopup(cb func(XDGSurface, XDGPopup)) {
-	man.add(unsafe.Pointer(s.p), &s.p.events.ping_timeout, func(data unsafe.Pointer) {
-		popup := XDGPopup{p: (*C.struct_wlr_xdg_popup)(data)}
+func (s *XDGSurface) OnNewPopup(cb func(*XDGSurface, *XDGPopup)) func() {
+	lis := newListener(unsafe.Pointer(s.p), func(lis *wlrlis, data unsafe.Pointer) {
+		popup := &XDGPopup{p: (*C.struct_wlr_xdg_popup)(data)}
 		cb(s, popup)
 	})
+	C.wl_signal_add(&s.p.events.ping_timeout, lis)
+	return func() {
+		removeListener(lis)
+	}
 }
 
 func (s XDGSurface) Geometry() Box {
@@ -175,20 +196,28 @@ type XDGTopLevel struct {
 	p *C.struct_wlr_xdg_toplevel
 }
 
-func (t XDGTopLevel) OnRequestMove(cb func(client SeatClient, serial uint32)) {
-	man.add(unsafe.Pointer(t.p), &t.p.events.request_move, func(data unsafe.Pointer) {
+func (t *XDGTopLevel) OnRequestMove(cb func(client *SeatClient, serial uint32)) func() {
+	lis := newListener(unsafe.Pointer(t.p), func(lis *wlrlis, data unsafe.Pointer) {
 		event := (*C.struct_wlr_xdg_toplevel_move_event)(data)
-		client := SeatClient{p: event.seat}
+		client := &SeatClient{p: event.seat}
 		cb(client, uint32(event.serial))
 	})
+	C.wl_signal_add(&t.p.events.request_move, lis)
+	return func() {
+		removeListener(lis)
+	}
 }
 
-func (t XDGTopLevel) OnRequestResize(cb func(client SeatClient, serial uint32, edges Edges)) {
-	man.add(unsafe.Pointer(t.p), &t.p.events.request_resize, func(data unsafe.Pointer) {
+func (t *XDGTopLevel) OnRequestResize(cb func(client *SeatClient, serial uint32, edges Edges)) func() {
+	lis := newListener(unsafe.Pointer(t.p), func(lis *wlrlis, data unsafe.Pointer) {
 		event := (*C.struct_wlr_xdg_toplevel_resize_event)(data)
-		client := SeatClient{p: event.seat}
+		client := &SeatClient{p: event.seat}
 		cb(client, uint32(event.serial), Edges(event.edges))
 	})
+	C.wl_signal_add(&t.p.events.request_resize, lis)
+	return func() {
+		removeListener(lis)
+	}
 }
 
 func (s XDGTopLevel) Nil() bool {

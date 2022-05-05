@@ -59,6 +59,12 @@ func (b *Backend) OnNewInput(cb func(*InputDevice)) func() {
 	lis := newListener(unsafe.Pointer(b.p), func(lis *wlrlis, data unsafe.Pointer) {
 		dev := &InputDevice{p: (*C.struct_wlr_input_device)(data)}
 		trackObject(data, &dev.p.events.destroy)
+		//man.add(unsafe.Pointer(dev.p), &dev.p.events.destroy, func(data unsafe.Pointer) {
+		//	// delete the underlying device type first
+		//	man.delete(*(*unsafe.Pointer)(unsafe.Pointer(&dev.p.anon0[0])))
+		//	// then delete the wlr_input_device itself
+		//	man.delete(unsafe.Pointer(dev.p))
+		//})
 		cb(dev)
 	})
 	C.wl_signal_add(&b.p.events.new_input, lis)
