@@ -256,10 +256,10 @@ func (b *Box) fromC(cb *C.struct_wlr_box) {
 // when the GC notices it has gone out of scope.
 //
 // Send help.
+//
+// TODO: Is it possible to clean this up with cgo.Handle, perhaps?
 
-type (
-	listenerCallback func(data unsafe.Pointer)
-)
+type listenerCallback func(data unsafe.Pointer)
 
 type manager struct {
 	mutex     sync.RWMutex
@@ -275,8 +275,8 @@ type listener struct {
 
 var (
 	man = &manager{
-		objects:   map[unsafe.Pointer][]*listener{},
-		listeners: map[*C.struct_wl_listener]*listener{},
+		objects:   make(map[unsafe.Pointer][]*listener),
+		listeners: make(map[*C.struct_wl_listener]*listener),
 	}
 )
 
