@@ -1,7 +1,9 @@
 package wlr
 
-// #include <stdlib.h>
-// #include <wlr/types/wlr_seat.h>
+/*
+#include <stdlib.h>
+#include <wlr/types/wlr_seat.h>
+*/
 import "C"
 
 import "unsafe"

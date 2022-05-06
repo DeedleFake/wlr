@@ -1,6 +1,8 @@
 package wlr
 
-// #include <wlr/xwayland.h>
+/*
+#include <wlr/xwayland.h>
+*/
 import "C"
 
 import "unsafe"

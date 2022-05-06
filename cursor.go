@@ -1,8 +1,10 @@
 package wlr
 
-// #include <wayland-server-core.h>
-// #include <wlr/types/wlr_cursor.h>
-// #include <wlr/types/wlr_pointer.h>
+/*
+#include <wayland-server-core.h>
+#include <wlr/types/wlr_cursor.h>
+#include <wlr/types/wlr_pointer.h>
+*/
 import "C"
 
 import (

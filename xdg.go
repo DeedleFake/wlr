@@ -1,13 +1,15 @@
 package wlr
 
-// #include <wlr/backend.h>
-// #include <wlr/types/wlr_xdg_shell.h>
-//
-// void _wlr_xdg_surface_for_each_cb(struct wlr_surface *surface, int sx, int sy, void *data);
-//
-// static inline void _wlr_xdg_surface_for_each_surface(struct wlr_xdg_surface *surface, void *user_data) {
-// 	wlr_xdg_surface_for_each_surface(surface, &_wlr_xdg_surface_for_each_cb, user_data);
-// }
+/*
+#include <wlr/backend.h>
+#include <wlr/types/wlr_xdg_shell.h>
+
+void _wlr_xdg_surface_for_each_cb(struct wlr_surface *surface, int sx, int sy, void *data);
+
+static inline void _wlr_xdg_surface_for_each_surface(struct wlr_xdg_surface *surface, void *user_data) {
+	wlr_xdg_surface_for_each_surface(surface, &_wlr_xdg_surface_for_each_cb, user_data);
+}
+*/
 import "C"
 
 import (

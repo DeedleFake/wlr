@@ -1,6 +1,8 @@
 package wlr
 
-// #include <wayland-server-core.h>
+/*
+#include <wayland-server-core.h>
+*/
 import "C"
 
 import (

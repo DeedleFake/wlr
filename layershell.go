@@ -1,6 +1,8 @@
 package wlr
 
-// #include <wlr/types/wlr_layer_shell_v1.h>
+/*
+#include <wlr/types/wlr_layer_shell_v1.h>
+*/
 import "C"
 
 import "unsafe"

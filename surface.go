@@ -1,8 +1,10 @@
 package wlr
 
-// #include <wlr/types/wlr_surface.h>
-// #include <wlr/types/wlr_xdg_shell.h>
-// #include <wlr/xwayland.h>
+/*
+#include <wlr/types/wlr_surface.h>
+#include <wlr/types/wlr_xdg_shell.h>
+#include <wlr/xwayland.h>
+*/
 import "C"
 
 import (

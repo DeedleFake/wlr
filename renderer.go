@@ -1,6 +1,8 @@
 package wlr
 
-// #include <wlr/render/wlr_renderer.h>
+/*
+#include <wlr/render/wlr_renderer.h>
+*/
 import "C"
 
 import "unsafe"

@@ -1,9 +1,11 @@
 package wlr
 
-// #include <wayland-server-core.h>
-// #include <wlr/backend.h>
-// #include <wlr/backend/wayland.h>
-// #include <wlr/backend/x11.h>
+/*
+#include <wayland-server-core.h>
+#include <wlr/backend.h>
+#include <wlr/backend/wayland.h>
+#include <wlr/backend/x11.h>
+*/
 import "C"
 
 import (

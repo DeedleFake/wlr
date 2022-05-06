@@ -1,18 +1,21 @@
 package wlr
 
-// #include <stdlib.h>
-// #include <wayland-server-core.h>
-//
-// extern void _listener_callback(struct wl_listener *listener, void *data);
-//
-// static inline void _listener_set_callback(struct wl_listener *listener) {
-// 	listener->notify = _listener_callback;
-// }
-//
-// static inline void *_listener_get_handle(struct wl_listener *listener) {
-// 	return listener + 1;
-// }
+/*
+#include <stdlib.h>
+#include <wayland-server-core.h>
+
+extern void _listener_callback(struct wl_listener *listener, void *data);
+
+static inline void _listener_set_callback(struct wl_listener *listener) {
+	listener->notify = _listener_callback;
+}
+
+static inline void *_listener_get_handle(struct wl_listener *listener) {
+	return listener + 1;
+}
+*/
 import "C"
+
 import (
 	"runtime/cgo"
 	"unsafe"

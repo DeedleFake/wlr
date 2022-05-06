@@ -1,20 +1,22 @@
 package wlr
 
-// #cgo pkg-config: wlroots wayland-server
-// #cgo CFLAGS: -D_GNU_SOURCE -DWLR_USE_UNSTABLE
-//
-// #include <stdarg.h>
-// #include <stdio.h>
-// #include <stdlib.h>
-// #include <time.h>
-//
-// #include <wlr/util/box.h>
-// #include <wlr/types/wlr_compositor.h>
-// #include <wlr/types/wlr_data_device.h>
-// #include <wlr/types/wlr_linux_dmabuf_v1.h>
-// #include <wlr/types/wlr_matrix.h>
-// #include <wlr/util/edges.h>
-// #include <wlr/xwayland.h>
+/*
+#cgo pkg-config: wlroots wayland-server
+#cgo CFLAGS: -D_GNU_SOURCE -DWLR_USE_UNSTABLE
+
+#include <stdarg.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
+
+#include <wlr/util/box.h>
+#include <wlr/types/wlr_compositor.h>
+#include <wlr/types/wlr_data_device.h>
+#include <wlr/types/wlr_linux_dmabuf_v1.h>
+#include <wlr/types/wlr_matrix.h>
+#include <wlr/util/edges.h>
+#include <wlr/xwayland.h>
+*/
 import "C"
 
 import (

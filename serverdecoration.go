@@ -1,6 +1,8 @@
 package wlr
 
-// #include <wlr/types/wlr_server_decoration.h>
+/*
+#include <wlr/types/wlr_server_decoration.h>
+*/
 import "C"
 
 import "unsafe"

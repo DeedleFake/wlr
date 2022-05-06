@@ -1,9 +1,11 @@
 package wlr
 
-// #include <wlr/backend/wayland.h>
-// #include <wlr/backend/x11.h>
-// #include <wlr/types/wlr_output.h>
-// #include <wlr/types/wlr_output_layout.h>
+/*
+#include <wlr/backend/wayland.h>
+#include <wlr/backend/x11.h>
+#include <wlr/types/wlr_output.h>
+#include <wlr/types/wlr_output_layout.h>
+*/
 import "C"
 
 import (

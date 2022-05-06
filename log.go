@@ -1,25 +1,27 @@
 package wlr
 
-// #include <stdlib.h>
-// #include <stdio.h>
-//
-// #include <wlr/util/log.h>
-//
-// void _wlr_log_cb(enum wlr_log_importance importance, char *msg);
-//
-// static inline void _wlr_log_inner_cb(enum wlr_log_importance importance, const char *fmt, va_list args) {
-// 	char *msg = NULL;
-// 	if (vasprintf(&msg, fmt, args) == -1) {
-// 		return;
-// 	}
-//
-// 	_wlr_log_cb(importance, msg);
-// 	free(msg);
-// }
-//
-// static inline void _wlr_log_set_cb(enum wlr_log_importance verbosity, bool is_set) {
-// 	wlr_log_init(verbosity, is_set ? &_wlr_log_inner_cb : NULL);
-// }
+/*
+#include <stdlib.h>
+#include <stdio.h>
+
+#include <wlr/util/log.h>
+
+void _wlr_log_cb(enum wlr_log_importance importance, char *msg);
+
+static inline void _wlr_log_inner_cb(enum wlr_log_importance importance, const char *fmt, va_list args) {
+	char *msg = NULL;
+	if (vasprintf(&msg, fmt, args) == -1) {
+		return;
+	}
+
+	_wlr_log_cb(importance, msg);
+	free(msg);
+}
+
+static inline void _wlr_log_set_cb(enum wlr_log_importance verbosity, bool is_set) {
+	wlr_log_init(verbosity, is_set ? &_wlr_log_inner_cb : NULL);
+}
+*/
 import "C"
 
 type (

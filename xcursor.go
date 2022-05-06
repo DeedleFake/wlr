@@ -1,10 +1,13 @@
 package wlr
 
-// #include <stdlib.h>
-//
-// #include <wlr/types/wlr_cursor.h>
-// #include <wlr/types/wlr_xcursor_manager.h>
+/*
+#include <stdlib.h>
+
+#include <wlr/types/wlr_cursor.h>
+#include <wlr/types/wlr_xcursor_manager.h>
+*/
 import "C"
+
 import "unsafe"
 
 type XCursor struct {
