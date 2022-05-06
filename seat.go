@@ -6,7 +6,10 @@ package wlr
 */
 import "C"
 
-import "unsafe"
+import (
+	"time"
+	"unsafe"
+)
 
 type Seat struct {
 	p *C.struct_wlr_seat
@@ -66,20 +69,20 @@ func (s Seat) SetKeyboard(dev InputDevice) {
 	C.wlr_seat_set_keyboard(s.p, dev.p)
 }
 
-func (s Seat) NotifyPointerButton(time uint32, button uint32, state ButtonState) {
-	C.wlr_seat_pointer_notify_button(s.p, C.uint32_t(time), C.uint32_t(button), uint32(state))
+func (s Seat) NotifyPointerButton(time time.Time, button uint32, state ButtonState) {
+	C.wlr_seat_pointer_notify_button(s.p, C.uint32_t(time.UnixMilli()), C.uint32_t(button), uint32(state))
 }
 
-func (s Seat) NotifyPointerAxis(time uint32, orientation AxisOrientation, delta float64, deltaDiscrete int32, source AxisSource) {
-	C.wlr_seat_pointer_notify_axis(s.p, C.uint32_t(time), C.enum_wlr_axis_orientation(orientation), C.double(delta), C.int32_t(deltaDiscrete), C.enum_wlr_axis_source(source))
+func (s Seat) NotifyPointerAxis(time time.Time, orientation AxisOrientation, delta float64, deltaDiscrete int32, source AxisSource) {
+	C.wlr_seat_pointer_notify_axis(s.p, C.uint32_t(time.UnixMilli()), C.enum_wlr_axis_orientation(orientation), C.double(delta), C.int32_t(deltaDiscrete), C.enum_wlr_axis_source(source))
 }
 
 func (s Seat) NotifyPointerEnter(surface Surface, sx float64, sy float64) {
 	C.wlr_seat_pointer_notify_enter(s.p, surface.p, C.double(sx), C.double(sy))
 }
 
-func (s Seat) NotifyPointerMotion(time uint32, sx float64, sy float64) {
-	C.wlr_seat_pointer_notify_motion(s.p, C.uint32_t(time), C.double(sx), C.double(sy))
+func (s Seat) NotifyPointerMotion(time time.Time, sx float64, sy float64) {
+	C.wlr_seat_pointer_notify_motion(s.p, C.uint32_t(time.UnixMilli()), C.double(sx), C.double(sy))
 }
 
 func (s Seat) NotifyPointerFrame() {
@@ -94,8 +97,8 @@ func (s Seat) NotifyKeyboardModifiers(k Keyboard) {
 	C.wlr_seat_keyboard_notify_modifiers(s.p, &k.p.modifiers)
 }
 
-func (s Seat) NotifyKeyboardKey(time uint32, keyCode uint32, state KeyState) {
-	C.wlr_seat_keyboard_notify_key(s.p, C.uint32_t(time), C.uint32_t(keyCode), C.uint32_t(state))
+func (s Seat) NotifyKeyboardKey(time time.Time, keyCode uint32, state KeyState) {
+	C.wlr_seat_keyboard_notify_key(s.p, C.uint32_t(time.UnixMilli()), C.uint32_t(keyCode), C.uint32_t(state))
 }
 
 func (s Seat) ClearPointerFocus() {
