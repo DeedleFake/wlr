@@ -162,12 +162,12 @@ func (m OutputMode) RefreshRate() int32 {
 type OutputTransform int
 
 const (
-	OutputTransformNormal OutputTransform = iota
-	OutputTransform90
-	OutputTransform180
-	OutputTransform270
-	OutputTransformFlipped
-	OutputTransformFlipped90
-	OutputTransformFlipped180
-	OutputTransformFlipped270
+	OutputTransformNormal     OutputTransform = C.WL_OUTPUT_TRANSFORM_NORMAL
+	OutputTransform90         OutputTransform = C.WL_OUTPUT_TRANSFORM_90
+	OutputTransform180        OutputTransform = C.WL_OUTPUT_TRANSFORM_180
+	OutputTransform270        OutputTransform = C.WL_OUTPUT_TRANSFORM_270
+	OutputTransformFlipped    OutputTransform = C.WL_OUTPUT_TRANSFORM_FLIPPED
+	OutputTransformFlipped90  OutputTransform = C.WL_OUTPUT_TRANSFORM_FLIPPED_90
+	OutputTransformFlipped180 OutputTransform = C.WL_OUTPUT_TRANSFORM_FLIPPED_180
+	OutputTransformFlipped270 OutputTransform = C.WL_OUTPUT_TRANSFORM_FLIPPED_270
 )
