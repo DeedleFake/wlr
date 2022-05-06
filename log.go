@@ -27,10 +27,10 @@ import "C"
 type LogImportance uint32
 
 const (
-	LogImportanceSilent LogImportance = C.WLR_SILENT
-	LogImportanceError  LogImportance = C.WLR_ERROR
-	LogImportanceInfo   LogImportance = C.WLR_INFO
-	LogImportanceDebug  LogImportance = C.WLR_DEBUG
+	Silent LogImportance = C.WLR_SILENT
+	Error  LogImportance = C.WLR_ERROR
+	Info   LogImportance = C.WLR_INFO
+	Debug  LogImportance = C.WLR_DEBUG
 )
 
 type LogFunc func(importance LogImportance, msg string)
