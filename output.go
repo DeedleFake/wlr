@@ -63,6 +63,10 @@ func (o Output) EffectiveResolution() (int, int) {
 	return int(width), int(height)
 }
 
+func (o Output) InitRender(a Allocator, r Renderer) {
+	C.wlr_output_init_render(o.p, a.p, r.p)
+}
+
 func (o Output) AttachRender() (int, error) {
 	var bufferAge C.int
 	if !C.wlr_output_attach_render(o.p, &bufferAge) {
