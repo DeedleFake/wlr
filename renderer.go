@@ -11,7 +11,7 @@ type Renderer struct {
 	p *C.struct_wlr_renderer
 }
 
-func NewRenderer(backend Backend) Renderer {
+func AutocreateRenderer(backend Backend) Renderer {
 	p := C.wlr_renderer_autocreate(backend.p)
 	return Renderer{p: p}
 }
@@ -26,7 +26,7 @@ func (r Renderer) OnDestroy(cb func(Renderer)) Listener {
 	})
 }
 
-func (r Renderer) InitDisplay(display Display) {
+func (r Renderer) InitWLDisplay(display Display) {
 	C.wlr_renderer_init_wl_display(r.p, display.p)
 }
 

@@ -17,7 +17,7 @@ type Backend struct {
 	p *C.struct_wlr_backend
 }
 
-func NewBackend(display Display) Backend {
+func AutocreateBackend(display Display) Backend {
 	p := C.wlr_backend_autocreate(display.p)
 	return Backend{p: p}
 }

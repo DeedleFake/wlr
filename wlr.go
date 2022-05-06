@@ -115,7 +115,7 @@ type DataDeviceManager struct {
 	p *C.struct_wlr_data_device_manager
 }
 
-func NewDataDeviceManager(display Display) DataDeviceManager {
+func CreateDataDeviceManager(display Display) DataDeviceManager {
 	p := C.wlr_data_device_manager_create(display.p)
 	return DataDeviceManager{p: p}
 }
@@ -130,7 +130,7 @@ type Compositor struct {
 	p *C.struct_wlr_compositor
 }
 
-func NewCompositor(display Display, renderer Renderer) Compositor {
+func CreateCompositor(display Display, renderer Renderer) Compositor {
 	p := C.wlr_compositor_create(display.p, renderer.p)
 	return Compositor{p: p}
 }

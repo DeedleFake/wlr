@@ -14,7 +14,7 @@ type Display struct {
 	p *C.struct_wl_display
 }
 
-func NewDisplay() Display {
+func CreateDisplay() Display {
 	p := C.wl_display_create()
 	return Display{p: p}
 }
