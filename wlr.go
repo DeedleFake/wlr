@@ -12,7 +12,6 @@ package wlr
 #include <wlr/util/box.h>
 #include <wlr/types/wlr_compositor.h>
 #include <wlr/types/wlr_data_device.h>
-#include <wlr/types/wlr_linux_dmabuf_v1.h>
 #include <wlr/types/wlr_matrix.h>
 #include <wlr/util/edges.h>
 #include <wlr/xwayland.h>
@@ -68,21 +67,6 @@ func (m *Matrix) fromC(cm *[9]C.float) {
 	for i := range cm {
 		m[i] = float32(cm[i])
 	}
-}
-
-type DMABuf struct {
-	p *C.struct_wlr_linux_dmabuf_v1
-}
-
-func NewDMABuf(display Display, renderer Renderer) DMABuf {
-	p := C.wlr_linux_dmabuf_v1_create(display.p, renderer.p)
-	return DMABuf{p: p}
-}
-
-func (b DMABuf) OnDestroy(cb func(DMABuf)) Listener {
-	return newListener(&b.p.events.destroy, func(lis Listener, data unsafe.Pointer) {
-		cb(b)
-	})
 }
 
 type EventLoop struct {
