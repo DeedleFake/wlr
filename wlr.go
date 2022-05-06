@@ -117,41 +117,34 @@ type DMABuf struct {
 	p *C.struct_wlr_linux_dmabuf_v1
 }
 
-func NewDMABuf(display *Display, renderer *Renderer) *DMABuf {
+func NewDMABuf(display Display, renderer Renderer) DMABuf {
 	p := C.wlr_linux_dmabuf_v1_create(display.p, renderer.p)
-	trackObject(unsafe.Pointer(p), &p.events.destroy)
-	return &DMABuf{p: p}
+	return DMABuf{p: p}
 }
 
-func (b *DMABuf) OnDestroy(cb func(*DMABuf)) func() {
-	lis := newListener(unsafe.Pointer(b.p), func(lis *wlrlis, data unsafe.Pointer) {
+func (b DMABuf) OnDestroy(cb func(DMABuf)) Listener {
+	return newListener(&b.p.events.destroy, func(lis Listener, data unsafe.Pointer) {
 		cb(b)
 	})
-	C.wl_signal_add(&b.p.events.destroy, lis)
-	return func() {
-		removeListener(lis)
-	}
 }
 
 type EventLoop struct {
 	p *C.struct_wl_event_loop
 }
 
-func (evl *EventLoop) OnDestroy(cb func(*EventLoop)) func() {
-	lis := newListener(unsafe.Pointer(evl.p), func(lis *wlrlis, data unsafe.Pointer) {
+func (evl EventLoop) OnDestroy(cb func(EventLoop)) Listener {
+	lis := newListener(nil, func(lis Listener, data unsafe.Pointer) {
 		cb(evl)
 	})
-	C.wl_event_loop_add_destroy_listener(evl.p, lis)
-	return func() {
-		removeListener(lis)
-	}
+	C.wl_event_loop_add_destroy_listener(evl.p, lis.p)
+	return lis
 }
 
-func (evl *EventLoop) Fd() uintptr {
+func (evl EventLoop) Fd() uintptr {
 	return uintptr(C.wl_event_loop_get_fd(evl.p))
 }
 
-func (evl *EventLoop) Dispatch(timeout time.Duration) {
+func (evl EventLoop) Dispatch(timeout time.Duration) {
 	var d int
 	if timeout >= 0 {
 		d = int(timeout / time.Millisecond)
@@ -165,40 +158,30 @@ type DataDeviceManager struct {
 	p *C.struct_wlr_data_device_manager
 }
 
-func NewDataDeviceManager(display *Display) *DataDeviceManager {
+func NewDataDeviceManager(display Display) DataDeviceManager {
 	p := C.wlr_data_device_manager_create(display.p)
-	trackObject(unsafe.Pointer(p), &p.events.destroy)
-	return &DataDeviceManager{p: p}
+	return DataDeviceManager{p: p}
 }
 
-func (m *DataDeviceManager) OnDestroy(cb func(*DataDeviceManager)) func() {
-	lis := newListener(unsafe.Pointer(m.p), func(lis *wlrlis, data unsafe.Pointer) {
+func (m DataDeviceManager) OnDestroy(cb func(DataDeviceManager)) Listener {
+	return newListener(&m.p.events.destroy, func(lis Listener, data unsafe.Pointer) {
 		cb(m)
 	})
-	C.wl_signal_add(&m.p.events.destroy, lis)
-	return func() {
-		removeListener(lis)
-	}
 }
 
 type Compositor struct {
 	p *C.struct_wlr_compositor
 }
 
-func NewCompositor(display *Display, renderer *Renderer) *Compositor {
+func NewCompositor(display Display, renderer Renderer) Compositor {
 	p := C.wlr_compositor_create(display.p, renderer.p)
-	trackObject(unsafe.Pointer(p), &p.events.destroy)
-	return &Compositor{p: p}
+	return Compositor{p: p}
 }
 
-func (c *Compositor) OnDestroy(cb func(*Compositor)) func() {
-	lis := newListener(unsafe.Pointer(c.p), func(lis *wlrlis, data unsafe.Pointer) {
+func (c Compositor) OnDestroy(cb func(Compositor)) Listener {
+	return newListener(&c.p.events.destroy, func(lis Listener, data unsafe.Pointer) {
 		cb(c)
 	})
-	C.wl_signal_add(&c.p.events.destroy, lis)
-	return func() {
-		removeListener(lis)
-	}
 }
 
 type Color struct {

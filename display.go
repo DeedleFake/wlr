@@ -12,25 +12,21 @@ type Display struct {
 	p *C.struct_wl_display
 }
 
-func NewDisplay() *Display {
+func NewDisplay() Display {
 	p := C.wl_display_create()
-	d := &Display{p: p}
-	d.OnDestroy(func(d *Display) { removeObject(unsafe.Pointer(p)) })
-	return d
+	return Display{p: p}
 }
 
-func (d *Display) Destroy() {
+func (d Display) Destroy() {
 	C.wl_display_destroy(d.p)
 }
 
-func (d *Display) OnDestroy(cb func(*Display)) func() {
-	lis := newListener(unsafe.Pointer(d.p), func(lis *wlrlis, data unsafe.Pointer) {
+func (d Display) OnDestroy(cb func(Display)) Listener {
+	lis := newListener(nil, func(lis Listener, data unsafe.Pointer) {
 		cb(d)
 	})
-	C.wl_display_add_destroy_listener(d.p, lis)
-	return func() {
-		removeListener(lis)
-	}
+	C.wl_display_add_destroy_listener(d.p, lis.p)
+	return lis
 }
 
 func (d Display) Run() {
@@ -41,12 +37,9 @@ func (d Display) Terminate() {
 	C.wl_display_terminate(d.p)
 }
 
-func (d Display) EventLoop() *EventLoop {
+func (d Display) EventLoop() EventLoop {
 	p := C.wl_display_get_event_loop(d.p)
-	evl := &EventLoop{p: p}
-	evl.OnDestroy(func(*EventLoop) {
-		removeObject(unsafe.Pointer(p))
-	})
+	evl := EventLoop{p: p}
 	return evl
 }
 

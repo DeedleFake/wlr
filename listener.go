@@ -5,66 +5,67 @@ package wlr
 //
 // extern void _listener_callback(struct wl_listener *listener, void *data);
 //
-// static inline void _set_listener_callback(struct wl_listener *listener) {
+// static inline void _listener_set_callback(struct wl_listener *listener) {
 // 	listener->notify = _listener_callback;
+// }
+//
+// static inline void *_listener_get_handle(struct wl_listener *listener) {
+// 	return listener + 1;
 // }
 import "C"
 import (
-	"fmt"
+	"runtime/cgo"
 	"unsafe"
-
-	"deedles.dev/wlr/internal/util"
 )
 
-type wlrlis = C.struct_wl_listener
+type listenerFunc func(lis Listener, data unsafe.Pointer)
 
-var cbs util.SMap[*wlrlis, callback]
-
-type callback struct {
-	obj unsafe.Pointer
-	cb  callbackFunc
+// Listener represents an attached signal handler for a Wayland event
+// of some kind.
+//
+// Note: It is the client's responsibility to call Destroy when they
+// are done with a Listener in order to free resources. Failure to do
+// so will result in a memory leak.
+type Listener struct {
+	p *C.struct_wl_listener
 }
 
-type callbackFunc func(lis *wlrlis, data unsafe.Pointer)
+func newListener(sig *C.struct_wl_signal, cb listenerFunc) Listener {
+	// I guess that wl_listener can do user data after all. Huh.
+	lis := Listener{
+		p: (*C.struct_wl_listener)(C.malloc(C.sizeof_struct_wl_listener + C.sizeof_uintptr_t)),
+	}
+	*(lis.handle()) = cgo.NewHandle(cb)
+	C._listener_set_callback(lis.p)
 
-func newListener(obj unsafe.Pointer, cb callbackFunc) *wlrlis {
-	lis := (*wlrlis)(C.malloc(C.sizeof_struct_wl_listener))
-	C._set_listener_callback(lis)
-	cbs.Store(lis, callback{obj, cb})
+	if sig != nil {
+		C.wl_signal_add(sig, lis.p)
+	}
+
 	return lis
 }
 
-func removeListener(lis *wlrlis) {
-	cbs.Delete(lis)
-	C.wl_list_remove(&lis.link)
-	C.free(unsafe.Pointer(lis))
+func (lis Listener) handle() *cgo.Handle {
+	return (*cgo.Handle)(C._listener_get_handle(lis.p))
 }
 
-func trackObject(p unsafe.Pointer, sig *C.struct_wl_signal) func() {
-	lis := newListener(p, func(lis *wlrlis, data unsafe.Pointer) {
-		removeObject(unsafe.Pointer(p))
-	})
-	C.wl_signal_add(sig, lis)
-	return func() {
-		removeListener(lis)
-	}
+// Destroy frees resources associated with the Listener and disconnects
+// it from the signal that it is attached to.
+//
+// The behavior of this method if called twice is undefined.
+func (lis Listener) Destroy() {
+	lis.handle().Delete()
+	C.wl_list_remove(&lis.p.link)
+	C.free(unsafe.Pointer(lis.p))
+	lis.p = nil
 }
 
-func removeObject(obj unsafe.Pointer) {
-	cbs.Range(func(lis *wlrlis, cb callback) bool {
-		if cb.obj != obj {
-			return true
-		}
-		removeListener(lis)
-		return true
-	})
+func (lis Listener) Valid() bool {
+	return lis.p != nil
 }
 
 //export _listener_callback
-func _listener_callback(lis *wlrlis, data unsafe.Pointer) {
-	cb, ok := cbs.Load(lis)
-	if !ok {
-		panic(fmt.Errorf("no callback found for listener %v with data %v", lis, data))
-	}
-	cb.cb(lis, data)
+func _listener_callback(p *C.struct_wl_listener, data unsafe.Pointer) {
+	lis := Listener{p: p}
+	lis.handle().Value().(listenerFunc)(lis, data)
 }

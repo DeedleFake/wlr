@@ -19,14 +19,10 @@ type OutputMode struct {
 	p *C.struct_wlr_output_mode
 }
 
-func (o *Output) OnDestroy(cb func(*Output)) func() {
-	lis := newListener(unsafe.Pointer(o.p), func(lis *wlrlis, data unsafe.Pointer) {
+func (o Output) OnDestroy(cb func(Output)) Listener {
+	return newListener(&o.p.events.destroy, func(lis Listener, data unsafe.Pointer) {
 		cb(o)
 	})
-	C.wl_signal_add(&o.p.events.destroy, lis)
-	return func() {
-		removeListener(lis)
-	}
 }
 
 func (o Output) Name() string {
@@ -43,14 +39,10 @@ func (o Output) TransformMatrix() Matrix {
 	return matrix
 }
 
-func (o *Output) OnFrame(cb func(*Output)) func() {
-	lis := newListener(unsafe.Pointer(o.p), func(lis *wlrlis, data unsafe.Pointer) {
+func (o Output) OnFrame(cb func(Output)) Listener {
+	return newListener(&o.p.events.frame, func(lis Listener, data unsafe.Pointer) {
 		cb(o)
 	})
-	C.wl_signal_add(&o.p.events.frame, lis)
-	return func() {
-		removeListener(lis)
-	}
 }
 
 func (o Output) RenderSoftwareCursors() {
@@ -94,16 +86,16 @@ func (o Output) Commit() {
 	C.wlr_output_commit(o.p)
 }
 
-func (o Output) Modes() []OutputMode {
-	// TODO: figure out what to do with this ridiculous for loop
-	// perhaps this can be refactored into a less ugly hack that uses reflection
-	var modes []OutputMode
+func (o Output) Modes() (modes []OutputMode) {
 	var mode *C.struct_wlr_output_mode
-	for mode := (*C.struct_wlr_output_mode)(unsafe.Pointer(uintptr(unsafe.Pointer(o.p.modes.next)) - unsafe.Offsetof(mode.link))); &mode.link != &o.p.modes; mode = (*C.struct_wlr_output_mode)(unsafe.Pointer(uintptr(unsafe.Pointer(mode.link.next)) - unsafe.Offsetof(mode.link))) {
+	for {
+		mode = (*C.struct_wlr_output_mode)(unsafe.Add(unsafe.Pointer(o.p.modes.next), -int(unsafe.Offsetof(mode.link))))
+		if &mode.link == &o.p.modes {
+			return modes
+		}
+
 		modes = append(modes, OutputMode{p: mode})
 	}
-
-	return modes
 }
 
 func (o Output) SetMode(mode OutputMode) {
@@ -130,10 +122,9 @@ type OutputLayout struct {
 	p *C.struct_wlr_output_layout
 }
 
-func NewOutputLayout() *OutputLayout {
+func NewOutputLayout() OutputLayout {
 	p := C.wlr_output_layout_create()
-	trackObject(unsafe.Pointer(p), &p.events.destroy)
-	return &OutputLayout{p: p}
+	return OutputLayout{p: p}
 }
 
 func (l OutputLayout) Destroy() {
