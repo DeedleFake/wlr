@@ -16,7 +16,7 @@ type Cursor struct {
 	p *C.struct_wlr_cursor
 }
 
-func NewCursor() Cursor {
+func CreateCursor() Cursor {
 	p := C.wlr_cursor_create()
 	return Cursor{p: p}
 }

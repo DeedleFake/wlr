@@ -23,7 +23,7 @@ type ServerDecoration struct {
 	p *C.struct_wlr_server_decoration
 }
 
-func NewServerDecorationManager(display Display) ServerDecorationManager {
+func CreateServerDecorationManager(display Display) ServerDecorationManager {
 	p := C.wlr_server_decoration_manager_create(display.p)
 	return ServerDecorationManager{p: p}
 }

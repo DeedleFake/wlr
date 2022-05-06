@@ -124,7 +124,7 @@ type OutputLayout struct {
 	p *C.struct_wlr_output_layout
 }
 
-func NewOutputLayout() OutputLayout {
+func CreateOutputLayout() OutputLayout {
 	p := C.wlr_output_layout_create()
 	return OutputLayout{p: p}
 }

@@ -36,7 +36,7 @@ type XDGShell struct {
 	p *C.struct_wlr_xdg_shell
 }
 
-func NewXDGShell(display Display) XDGShell {
+func CreateXDGShell(display Display) XDGShell {
 	p := C.wlr_xdg_shell_create(display.p)
 	return XDGShell{p: p}
 }

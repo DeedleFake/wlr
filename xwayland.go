@@ -15,7 +15,7 @@ type XWaylandSurface struct {
 	p *C.struct_wlr_xwayland_surface
 }
 
-func NewXWayland(display Display, compositor Compositor, lazy bool) XWayland {
+func CreateXWayland(display Display, compositor Compositor, lazy bool) XWayland {
 	p := C.wlr_xwayland_create(display.p, compositor.p, C.bool(lazy))
 	return XWayland{p: p}
 }

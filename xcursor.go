@@ -22,7 +22,7 @@ type XCursorManager struct {
 	p *C.struct_wlr_xcursor_manager
 }
 
-func NewXCursorManager() XCursorManager {
+func CreateXCursorManager() XCursorManager {
 	p := C.wlr_xcursor_manager_create(nil, 24)
 	return XCursorManager{p: p}
 }

@@ -32,7 +32,7 @@ const (
 	SeatCapabilityTouch    SeatCapability = C.WL_SEAT_CAPABILITY_TOUCH
 )
 
-func NewSeat(display Display, name string) Seat {
+func CreateSeat(display Display, name string) Seat {
 	s := C.CString(name)
 	defer C.free(unsafe.Pointer(s))
 	p := C.wlr_seat_create(display.p, s)
