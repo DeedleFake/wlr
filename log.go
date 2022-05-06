@@ -24,10 +24,7 @@ static inline void _wlr_log_set_cb(enum wlr_log_importance verbosity, bool is_se
 */
 import "C"
 
-type (
-	LogImportance uint32
-	LogFunc       func(importance LogImportance, msg string)
-)
+type LogImportance uint32
 
 const (
 	LogImportanceSilent LogImportance = C.WLR_SILENT
@@ -36,18 +33,18 @@ const (
 	LogImportanceDebug  LogImportance = C.WLR_DEBUG
 )
 
-var (
-	onLog LogFunc
-)
+type LogFunc func(importance LogImportance, msg string)
+
+var onLog LogFunc
+
+func LogInit(verbosity LogImportance, cb LogFunc) {
+	C._wlr_log_set_cb(C.enum_wlr_log_importance(verbosity), cb != nil)
+	onLog = cb
+}
 
 //export _wlr_log_cb
 func _wlr_log_cb(importance LogImportance, msg *C.char) {
 	if onLog != nil {
 		onLog(importance, C.GoString(msg))
 	}
-}
-
-func OnLog(verbosity LogImportance, cb LogFunc) {
-	C._wlr_log_set_cb(C.enum_wlr_log_importance(verbosity), cb != nil)
-	onLog = cb
 }
