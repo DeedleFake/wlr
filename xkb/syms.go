@@ -1,6 +1,8 @@
 package xkb
 
-// #include <xkbcommon/xkbcommon-keysyms.h>
+/*
+#include <xkbcommon/xkbcommon-keysyms.h>
+*/
 import "C"
 
 type KeySym int32
