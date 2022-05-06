@@ -37,7 +37,7 @@ type LogFunc func(importance LogImportance, msg string)
 
 var onLog LogFunc
 
-func LogInit(verbosity LogImportance, cb LogFunc) {
+func InitLog(verbosity LogImportance, cb LogFunc) {
 	C._wlr_log_set_cb(C.enum_wlr_log_importance(verbosity), cb != nil)
 	onLog = cb
 }
