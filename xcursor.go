@@ -22,8 +22,14 @@ type XCursorManager struct {
 	p *C.struct_wlr_xcursor_manager
 }
 
-func CreateXCursorManager() XCursorManager {
-	p := C.wlr_xcursor_manager_create(nil, 24)
+func CreateXCursorManager(name string, size uint32) XCursorManager {
+	var cname *C.char
+	if name != "" {
+		cname = C.CString(name)
+		defer C.free(unsafe.Pointer(cname))
+	}
+
+	p := C.wlr_xcursor_manager_create(cname, C.uint32_t(size))
 	return XCursorManager{p: p}
 }
 
@@ -31,8 +37,8 @@ func (m XCursorManager) Destroy() {
 	C.wlr_xcursor_manager_destroy(m.p)
 }
 
-func (m XCursorManager) Load() {
-	C.wlr_xcursor_manager_load(m.p, 1)
+func (m XCursorManager) Load(scale float64) {
+	C.wlr_xcursor_manager_load(m.p, C.float(scale))
 }
 
 func (m XCursorManager) SetCursorImage(cursor Cursor, name string) {
