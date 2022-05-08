@@ -21,8 +21,16 @@ static inline void _wlr_log_inner_cb(enum wlr_log_importance importance, const c
 static inline void _wlr_log_set_cb(enum wlr_log_importance verbosity, bool is_set) {
 	wlr_log_init(verbosity, is_set ? &_wlr_log_inner_cb : NULL);
 }
+
+static inline void _wlr_log_wrapper(enum wlr_log_importance verbosity, const char *str) {
+	_wlr_log(verbosity, str, _WLR_FILENAME, __LINE__);
+}
 */
 import "C"
+import (
+	"fmt"
+	"unsafe"
+)
 
 type LogImportance uint32
 
@@ -40,6 +48,13 @@ var onLog LogFunc
 func InitLog(verbosity LogImportance, cb LogFunc) {
 	C._wlr_log_set_cb(C.enum_wlr_log_importance(verbosity), cb != nil)
 	onLog = cb
+}
+
+func Log(verbosity LogImportance, format string, args ...any) {
+	str := C.CString("[%s:%d] " + fmt.Sprintf(format, args...))
+	defer C.free(unsafe.Pointer(str))
+
+	C._wlr_log_wrapper(C.enum_wlr_log_importance(verbosity), str)
 }
 
 //export _wlr_log_cb
