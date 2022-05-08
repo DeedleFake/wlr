@@ -21,32 +21,6 @@ const (
 	KeySymCaseInsensitive KeySymFlags = C.XKB_KEYSYM_CASE_INSENSITIVE
 )
 
-type Context struct {
-	p *C.struct_xkb_context
-}
-
-type Keymap struct {
-	p *C.struct_xkb_keymap
-}
-
-func NewKeymapFromNames(ctx Context, rules *RuleNames, flags KeymapCompileFlags) Keymap {
-	p := C.xkb_keymap_new_from_names(ctx.p, rules.toC(), C.enum_xkb_keymap_compile_flags(flags))
-	return Keymap{p: p}
-}
-
-type State struct {
-	p *C.struct_xkb_state
-}
-
-func WrapState(p unsafe.Pointer) State {
-	return State{p: (*C.struct_xkb_state)(p)}
-}
-
-func NewContext(flags ContextFlags) Context {
-	p := C.xkb_context_new(C.XKB_CONTEXT_NO_FLAGS)
-	return Context{p: p}
-}
-
 func SymFromName(name string, flags KeySymFlags) KeySym {
 	s := C.CString(name)
 	sym := C.xkb_keysym_from_name(s, C.enum_xkb_keysym_flags(flags))
@@ -54,16 +28,29 @@ func SymFromName(name string, flags KeySymFlags) KeySym {
 	return KeySym(sym)
 }
 
+type ContextFlags int
+
+const (
+	ContextNoFlags            ContextFlags = C.XKB_CONTEXT_NO_FLAGS
+	ContextNoDefaultincludes               = C.XKB_CONTEXT_NO_DEFAULT_INCLUDES
+	ContextNoEnvironmentNames              = C.XKB_CONTEXT_NO_ENVIRONMENT_NAMES
+)
+
+type Context struct {
+	p *C.struct_xkb_context
+}
+
+func NewContext(flags ContextFlags) Context {
+	p := C.xkb_context_new(C.XKB_CONTEXT_NO_FLAGS)
+	return Context{p: p}
+}
+
 func (c Context) Unref() {
 	C.xkb_context_unref(c.p)
 }
 
-func (m Keymap) Ptr() unsafe.Pointer {
-	return unsafe.Pointer(m.p)
-}
-
-func (m Keymap) Unref() {
-	C.xkb_keymap_unref(m.p)
+type State struct {
+	p *C.struct_xkb_state
 }
 
 func (s State) Syms(keyCode KeyCode) []KeySym {
@@ -103,17 +90,3 @@ func (rn *RuleNames) toC() *C.struct_xkb_rule_names {
 		options: C.CString(rn.Options),
 	}
 }
-
-type ContextFlags int
-
-const (
-	ContextNoFlags            ContextFlags = C.XKB_CONTEXT_NO_FLAGS
-	ContextNoDefaultincludes               = C.XKB_CONTEXT_NO_DEFAULT_INCLUDES
-	ContextNoEnvironmentNames              = C.XKB_CONTEXT_NO_ENVIRONMENT_NAMES
-)
-
-type KeymapCompileFlags int
-
-const (
-	KeymapCompileNoFlags KeymapCompileFlags = C.XKB_KEYMAP_COMPILE_NO_FLAGS
-)
