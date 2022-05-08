@@ -3,6 +3,7 @@ package wlr
 /*
 #include <wlr/backend.h>
 #include <wlr/types/wlr_xdg_shell.h>
+#include <wlr/types/wlr_xdg_output_v1.h>
 
 void _wlr_xdg_surface_for_each_cb(struct wlr_surface *surface, int sx, int sy, void *data);
 
@@ -194,4 +195,19 @@ func _wlr_xdg_surface_for_each_cb(surface *C.struct_wlr_surface, sx C.int, sy C.
 	if cb != nil {
 		cb(Surface{p: surface}, int(sx), int(sy))
 	}
+}
+
+type XDGOutputManagerV1 struct {
+	p *C.struct_wlr_xdg_output_manager_v1
+}
+
+func CreateXDGOutputManagerV1(display Display, layout OutputLayout) XDGOutputManagerV1 {
+	p := C.wlr_xdg_output_manager_v1_create(display.p, layout.p)
+	return XDGOutputManagerV1{p: p}
+}
+
+func (m XDGOutputManagerV1) OnDestroy(cb func(XDGOutputManagerV1)) Listener {
+	return newListener(&m.p.events.destroy, func(lis Listener, data unsafe.Pointer) {
+		cb(m)
+	})
 }
