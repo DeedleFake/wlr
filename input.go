@@ -39,7 +39,9 @@ type Keyboard struct {
 }
 
 func (k Keyboard) SetKeymap(keymap xkb.Keymap) {
-	C.wlr_keyboard_set_keymap(k.p, (*C.struct_xkb_keymap)(keymap.Ptr()))
+	// Warning: This works because the pointer is the first thing in the
+	// struct. Be careful.
+	C.wlr_keyboard_set_keymap(k.p, *(**C.struct_xkb_keymap)(unsafe.Pointer(&keymap)))
 }
 
 func (k Keyboard) RepeatInfo() (rate int32, delay int32) {
@@ -51,7 +53,8 @@ func (k Keyboard) SetRepeatInfo(rate int32, delay int32) {
 }
 
 func (k Keyboard) XKBState() xkb.State {
-	return xkb.WrapState(unsafe.Pointer(k.p.xkb_state))
+	// TODO: Find a better way to do this.
+	return *(*xkb.State)(unsafe.Pointer(&k.p.xkb_state))
 }
 
 func (k Keyboard) Modifiers() KeyboardModifier {
