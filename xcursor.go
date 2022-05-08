@@ -26,7 +26,6 @@ func CreateXCursorManager(name string, size uint32) XCursorManager {
 	var cname *C.char
 	if name != "" {
 		cname = C.CString(name)
-		defer C.free(unsafe.Pointer(cname))
 	}
 
 	p := C.wlr_xcursor_manager_create(cname, C.uint32_t(size))
@@ -34,6 +33,10 @@ func CreateXCursorManager(name string, size uint32) XCursorManager {
 }
 
 func (m XCursorManager) Destroy() {
+	if m.p.name != nil {
+		C.free(unsafe.Pointer(m.p.name))
+	}
+
 	C.wlr_xcursor_manager_destroy(m.p)
 }
 
