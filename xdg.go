@@ -59,7 +59,7 @@ type XDGSurface struct {
 }
 
 func (s XDGSurface) Valid() bool {
-	return s.p == nil
+	return s.p != nil
 }
 
 func (s XDGSurface) Walk(visit XDGSurfaceWalkFunc) {
@@ -180,7 +180,7 @@ func (t XDGTopLevel) OnRequestResize(cb func(client SeatClient, serial uint32, e
 }
 
 func (s XDGTopLevel) Valid() bool {
-	return s.p == nil
+	return s.p != nil
 }
 
 func (t XDGTopLevel) Title() string {

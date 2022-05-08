@@ -17,10 +17,6 @@ type Output struct {
 	p *C.struct_wlr_output
 }
 
-type OutputMode struct {
-	p *C.struct_wlr_output_mode
-}
-
 func (o Output) OnDestroy(cb func(Output)) Listener {
 	return newListener(&o.p.events.destroy, func(lis Listener, data unsafe.Pointer) {
 		cb(o)
@@ -33,6 +29,18 @@ func (o Output) Name() string {
 
 func (o Output) Scale() float32 {
 	return float32(o.p.scale)
+}
+
+func (o Output) SetScale(scale float32) {
+	C.wlr_output_set_scale(o.p, C.float(scale))
+}
+
+func (o Output) Transform() OutputTransform {
+	return OutputTransform(o.p.transform)
+}
+
+func (o Output) SetTransform(transform OutputTransform) {
+	C.wlr_output_set_transform(o.p, C.enum_wl_output_transform(transform))
 }
 
 func (o Output) TransformMatrix() Matrix {
@@ -124,6 +132,11 @@ func (o Output) SetTitle(title string) error {
 	return nil
 }
 
+func (o Output) PreferredMode() OutputMode {
+	p := C.wlr_output_preferred_mode(o.p)
+	return OutputMode{p: p}
+}
+
 type OutputLayout struct {
 	p *C.struct_wlr_output_layout
 }
@@ -141,14 +154,18 @@ func (l OutputLayout) AddAuto(output Output) {
 	C.wlr_output_layout_add_auto(l.p, output.p)
 }
 
+func (l OutputLayout) Add(output Output, lx, ly int) {
+	C.wlr_output_layout_add(l.p, output.p, C.int(lx), C.int(ly))
+}
+
 func (l OutputLayout) Coords(output Output) (x float64, y float64) {
 	var ox, oy C.double
 	C.wlr_output_layout_output_coords(l.p, output.p, &ox, &oy)
 	return float64(ox), float64(oy)
 }
 
-func OutputTransformInvert(transform uint32) uint32 {
-	return uint32(C.wlr_output_transform_invert(C.enum_wl_output_transform(transform)))
+type OutputMode struct {
+	p *C.struct_wlr_output_mode
 }
 
 func (m OutputMode) Width() int32 {
@@ -163,6 +180,10 @@ func (m OutputMode) RefreshRate() int32 {
 	return int32(m.p.refresh)
 }
 
+func (m OutputMode) Valid() bool {
+	return m.p != nil
+}
+
 type OutputTransform int
 
 const (
@@ -175,3 +196,7 @@ const (
 	OutputTransformFlipped180 OutputTransform = C.WL_OUTPUT_TRANSFORM_FLIPPED_180
 	OutputTransformFlipped270 OutputTransform = C.WL_OUTPUT_TRANSFORM_FLIPPED_270
 )
+
+func (transform OutputTransform) Invert() OutputTransform {
+	return OutputTransform(C.wlr_output_transform_invert(C.enum_wl_output_transform(transform)))
+}

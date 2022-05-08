@@ -31,7 +31,7 @@ type SurfaceState struct {
 }
 
 func (s Surface) Valid() bool {
-	return s.p == nil
+	return s.p != nil
 }
 
 func (s Surface) OnDestroy(cb func(Surface)) Listener {

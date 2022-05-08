@@ -28,5 +28,5 @@ func (t Texture) Destroy() {
 }
 
 func (t Texture) Valid() bool {
-	return t.p == nil
+	return t.p != nil
 }
