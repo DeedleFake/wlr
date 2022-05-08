@@ -30,7 +30,7 @@ type SurfaceState struct {
 	s C.struct_wlr_surface_state
 }
 
-func (s Surface) Nil() bool {
+func (s Surface) Valid() bool {
 	return s.p == nil
 }
 

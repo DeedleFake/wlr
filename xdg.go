@@ -58,7 +58,7 @@ type XDGSurface struct {
 	p *C.struct_wlr_xdg_surface
 }
 
-func (s XDGSurface) Nil() bool {
+func (s XDGSurface) Valid() bool {
 	return s.p == nil
 }
 
@@ -179,7 +179,7 @@ func (t XDGTopLevel) OnRequestResize(cb func(client SeatClient, serial uint32, e
 	})
 }
 
-func (s XDGTopLevel) Nil() bool {
+func (s XDGTopLevel) Valid() bool {
 	return s.p == nil
 }
 
