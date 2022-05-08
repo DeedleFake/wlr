@@ -71,11 +71,37 @@ func (k Keyboard) OnKey(cb func(keyboard Keyboard, time time.Time, keyCode uint3
 	})
 }
 
-type (
-	InputDeviceType uint32
-	ButtonState     uint32
-	AxisSource      uint32
-	AxisOrientation uint32
+type InputDeviceType uint32
+
+const (
+	InputDeviceTypeKeyboard   InputDeviceType = C.WLR_INPUT_DEVICE_KEYBOARD
+	InputDeviceTypePointer    InputDeviceType = C.WLR_INPUT_DEVICE_POINTER
+	InputDeviceTypeTouch      InputDeviceType = C.WLR_INPUT_DEVICE_TOUCH
+	InputDeviceTypeTabletTool InputDeviceType = C.WLR_INPUT_DEVICE_TABLET_TOOL
+	InputDeviceTypeTabletPad  InputDeviceType = C.WLR_INPUT_DEVICE_TABLET_PAD
+)
+
+type ButtonState uint32
+
+const (
+	ButtonStateReleased ButtonState = C.WLR_BUTTON_RELEASED
+	ButtonStatePressed  ButtonState = C.WLR_BUTTON_PRESSED
+)
+
+type AxisSource uint32
+
+const (
+	AxisSourceWheel      AxisSource = C.WLR_AXIS_SOURCE_WHEEL
+	AxisSourceFinger     AxisSource = C.WLR_AXIS_SOURCE_FINGER
+	AxisSourceContinuous AxisSource = C.WLR_AXIS_SOURCE_CONTINUOUS
+	AxisSourceWheelTilt  AxisSource = C.WLR_AXIS_SOURCE_WHEEL_TILT
+)
+
+type AxisOrientation uint32
+
+const (
+	AxisOrientationVertical   AxisOrientation = C.WLR_AXIS_ORIENTATION_VERTICAL
+	AxisOrientationHorizontal AxisOrientation = C.WLR_AXIS_ORIENTATION_HORIZONTAL
 )
 
 var inputDeviceNames = []string{
@@ -85,25 +111,6 @@ var inputDeviceNames = []string{
 	InputDeviceTypeTabletTool: "tablet tool",
 	InputDeviceTypeTabletPad:  "tablet pad",
 }
-
-const (
-	InputDeviceTypeKeyboard   InputDeviceType = C.WLR_INPUT_DEVICE_KEYBOARD
-	InputDeviceTypePointer    InputDeviceType = C.WLR_INPUT_DEVICE_POINTER
-	InputDeviceTypeTouch      InputDeviceType = C.WLR_INPUT_DEVICE_TOUCH
-	InputDeviceTypeTabletTool InputDeviceType = C.WLR_INPUT_DEVICE_TABLET_TOOL
-	InputDeviceTypeTabletPad  InputDeviceType = C.WLR_INPUT_DEVICE_TABLET_PAD
-
-	ButtonStateReleased ButtonState = C.WLR_BUTTON_RELEASED
-	ButtonStatePressed  ButtonState = C.WLR_BUTTON_PRESSED
-
-	AxisSourceWheel      AxisSource = C.WLR_AXIS_SOURCE_WHEEL
-	AxisSourceFinger     AxisSource = C.WLR_AXIS_SOURCE_FINGER
-	AxisSourceContinuous AxisSource = C.WLR_AXIS_SOURCE_CONTINUOUS
-	AxisSourceWheelTilt  AxisSource = C.WLR_AXIS_SOURCE_WHEEL_TILT
-
-	AxisOrientationVertical   AxisOrientation = C.WLR_AXIS_ORIENTATION_VERTICAL
-	AxisOrientationHorizontal AxisOrientation = C.WLR_AXIS_ORIENTATION_HORIZONTAL
-)
 
 type InputDevice struct {
 	p *C.struct_wlr_input_device
