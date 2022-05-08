@@ -137,7 +137,7 @@ func (l OutputLayout) Destroy() {
 	C.wlr_output_layout_destroy(l.p)
 }
 
-func (l OutputLayout) AddOutputAuto(output Output) {
+func (l OutputLayout) AddAuto(output Output) {
 	C.wlr_output_layout_add_auto(l.p, output.p)
 }
 
