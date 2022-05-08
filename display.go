@@ -57,3 +57,7 @@ func (d Display) AddSocketAuto() (string, error) {
 func (d Display) FlushClients() {
 	C.wl_display_flush_clients(d.p)
 }
+
+func (d Display) DestroyClients() {
+	C.wl_display_destroy_clients(d.p)
+}
