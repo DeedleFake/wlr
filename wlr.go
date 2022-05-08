@@ -33,18 +33,6 @@ const (
 	EdgeRight  Edges = C.WLR_EDGE_RIGHT
 )
 
-type Texture struct {
-	p *C.struct_wlr_texture
-}
-
-func (t Texture) Destroy() {
-	C.wlr_texture_destroy(t.p)
-}
-
-func (t Texture) Nil() bool {
-	return t.p == nil
-}
-
 type Matrix [9]float32
 
 func (m *Matrix) ProjectBox(box *Box, transform uint32, rotation float32, projection *Matrix) {
