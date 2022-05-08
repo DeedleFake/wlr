@@ -1,5 +1,10 @@
 package wlr
 
+/*
+#include <wlr/types/wlr_gamma_control_v1.h>
+*/
+import "C"
+
 import "unsafe"
 
 type GammaControlManagerV1 struct {
