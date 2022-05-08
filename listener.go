@@ -53,10 +53,15 @@ func (lis Listener) handle() *cgo.Handle {
 }
 
 // Destroy frees resources associated with the Listener and disconnects
-// it from the signal that it is attached to.
+// it from the signal that it is attached to. After this is called,
+// Valid will return false.
 //
-// The behavior of this method if called twice is undefined.
+// Calling this method on an invalid Listener is a no-op.
 func (lis Listener) Destroy() {
+	if !lis.Valid() {
+		return
+	}
+
 	lis.handle().Delete()
 	C.wl_list_remove(&lis.p.link)
 	C.free(unsafe.Pointer(lis.p))
@@ -67,8 +72,14 @@ func (lis Listener) Valid() bool {
 	return lis.p != nil
 }
 
+// Call calls the Listener with the given data. What exactly the data
+// is used for depends on how the Listener was created.
+func (lis Listener) Call(data unsafe.Pointer) {
+	lis.handle().Value().(listenerFunc)(lis, data)
+}
+
 //export _listener_callback
 func _listener_callback(p *C.struct_wl_listener, data unsafe.Pointer) {
 	lis := Listener{p: p}
-	lis.handle().Value().(listenerFunc)(lis, data)
+	lis.Call(data)
 }
