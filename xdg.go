@@ -57,6 +57,10 @@ func (s XDGSurface) Valid() bool {
 	return s.p != nil
 }
 
+func (s XDGSurface) Resource() Resource {
+	return Resource{p: s.p.resource}
+}
+
 func (s XDGSurface) ForEachSurface(cb func(Surface, int, int)) {
 	handle := cgo.NewHandle(cb)
 	C._wlr_xdg_surface_for_each_surface(s.p, unsafe.Pointer(&handle))

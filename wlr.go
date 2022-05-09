@@ -163,3 +163,23 @@ func rectToC(r image.Rectangle) (cr C.pixman_region32_t) {
 	)
 	return
 }
+
+type Resource struct {
+	p *C.struct_wl_resource
+}
+
+func (r Resource) GetClient() Client {
+	return Client{p: C.wl_resource_get_client(r.p)}
+}
+
+type Client struct {
+	p *C.struct_wl_client
+}
+
+func (c Client) GetCredentials() (pid, uid, gid int) {
+	var cpid C.pid_t
+	var cuid C.uid_t
+	var cgid C.gid_t
+	C.wl_client_get_credentials(c.p, &cpid, &cuid, &cgid)
+	return int(cpid), int(cuid), int(cgid)
+}
