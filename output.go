@@ -178,6 +178,28 @@ func (l OutputLayout) Coords(output Output) (x float64, y float64) {
 	return float64(ox), float64(oy)
 }
 
+func (l OutputLayout) OutputAt(x, y float64) Output {
+	p := C.wlr_output_layout_output_at(l.p, C.double(x), C.double(y))
+	return Output{p: p}
+}
+
+func (l OutputLayout) Get(output Output) OutputLayoutOutput {
+	p := C.wlr_output_layout_get(l.p, output.p)
+	return OutputLayoutOutput{p: p}
+}
+
+type OutputLayoutOutput struct {
+	p *C.struct_wlr_output_layout_output
+}
+
+func (o OutputLayoutOutput) X() int {
+	return int(o.p.x)
+}
+
+func (o OutputLayoutOutput) Y() int {
+	return int(o.p.y)
+}
+
 type OutputMode struct {
 	p *C.struct_wlr_output_mode
 }
