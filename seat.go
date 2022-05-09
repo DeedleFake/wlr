@@ -93,8 +93,8 @@ func (s Seat) NotifyKeyboardEnter(surface Surface, k Keyboard) {
 	C.wlr_seat_keyboard_notify_enter(s.p, surface.p, &k.p.keycodes[0], k.p.num_keycodes, &k.p.modifiers)
 }
 
-func (s Seat) NotifyKeyboardModifiers(k Keyboard) {
-	C.wlr_seat_keyboard_notify_modifiers(s.p, &k.p.modifiers)
+func (s Seat) NotifyKeyboardModifiers(modifiers KeyboardModifiers) {
+	C.wlr_seat_keyboard_notify_modifiers(s.p, modifiers.p)
 }
 
 func (s Seat) NotifyKeyboardKey(time time.Time, keyCode uint32, state KeyState) {

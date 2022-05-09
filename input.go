@@ -15,15 +15,16 @@ import (
 	"deedles.dev/wlr/xkb"
 )
 
-type (
-	KeyState         uint32
-	KeyboardModifier uint32
-)
+type KeyState uint32
 
 const (
 	KeyStateReleased KeyState = C.WL_KEYBOARD_KEY_STATE_RELEASED
 	KeyStatePressed  KeyState = C.WL_KEYBOARD_KEY_STATE_PRESSED
+)
 
+type KeyboardModifier uint32
+
+const (
 	KeyboardModifierShift KeyboardModifier = C.WLR_MODIFIER_SHIFT
 	KeyboardModifierCaps  KeyboardModifier = C.WLR_MODIFIER_CAPS
 	KeyboardModifierCtrl  KeyboardModifier = C.WLR_MODIFIER_CTRL
@@ -57,8 +58,12 @@ func (k Keyboard) XKBState() xkb.State {
 	return *(*xkb.State)(unsafe.Pointer(&k.p.xkb_state))
 }
 
-func (k Keyboard) Modifiers() KeyboardModifier {
+func (k Keyboard) GetModifiers() KeyboardModifier {
 	return KeyboardModifier(C.wlr_keyboard_get_modifiers(k.p))
+}
+
+func (k Keyboard) Modifiers() KeyboardModifiers {
+	return KeyboardModifiers{p: &k.p.modifiers}
 }
 
 func (k Keyboard) OnModifiers(cb func(keyboard Keyboard)) Listener {
@@ -147,4 +152,8 @@ func (d InputDevice) Keyboard() Keyboard {
 	validateInputDeviceType(d, "Keyboard", InputDeviceTypeKeyboard)
 	p := *(*unsafe.Pointer)(unsafe.Pointer(&d.p.anon0[0]))
 	return Keyboard{p: (*C.struct_wlr_keyboard)(p)}
+}
+
+type KeyboardModifiers struct {
+	p *C.struct_wlr_keyboard_modifiers
 }
