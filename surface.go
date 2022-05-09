@@ -67,17 +67,13 @@ func (s Surface) SurfaceAt(sx float64, sy float64) (surface Surface, subX float6
 	return Surface{p: p}, float64(csubX), float64(csubY)
 }
 
-func (s Surface) Texture() Texture {
+func (s Surface) GetTexture() Texture {
 	p := C.wlr_surface_get_texture(s.p)
 	return Texture{p: p}
 }
 
 func (s Surface) Current() SurfaceState {
 	return SurfaceState{s: s.p.current}
-}
-
-func (s Surface) Pending() SurfaceState {
-	return SurfaceState{s: s.p.pending}
 }
 
 func (s Surface) ForEachSurface(cb func(Surface, int, int)) {
