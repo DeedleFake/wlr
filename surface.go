@@ -10,6 +10,16 @@ void _wlr_surface_for_each_cb(struct wlr_surface *surface, int sx, int sy, void 
 static inline void _wlr_surface_for_each_surface(struct wlr_surface *surface, void *user_data) {
 	wlr_surface_for_each_surface(surface, _wlr_surface_for_each_cb, user_data);
 }
+
+// _new_timespec exists to avoid possible problems from differing type
+// names on some systems. C is less picky than Go, so it shouldn't be
+// a problem if it's done here.
+static inline struct timespec _new_timespec(long sec, long nsec) {
+	return (struct timespec){
+		.tv_sec = sec,
+		.tv_nsec = nsec,
+	};
+}
 */
 import "C"
 
@@ -85,10 +95,8 @@ func _wlr_surface_for_each_cb(surface *C.struct_wlr_surface, sx C.int, sy C.int,
 }
 
 func (s Surface) SendFrameDone(when time.Time) {
-	C.wlr_surface_send_frame_done(s.p, &C.struct_timespec{
-		tv_sec:  C.long(when.Unix()),
-		tv_nsec: C.long(when.Nanosecond()),
-	})
+	ts := C._new_timespec(C.long(when.Unix()), C.long(when.Nanosecond()))
+	C.wlr_surface_send_frame_done(s.p, &ts)
 }
 
 func (s Surface) XDGSurface() XDGSurface {
