@@ -32,6 +32,12 @@ type LayerSurfaceV1 struct {
 	p *C.struct_wlr_layer_surface_v1
 }
 
+func (s LayerSurfaceV1) Surface() Surface {
+	return Surface{
+		p: s.p.surface,
+	}
+}
+
 type LayerShellV1Layer int
 
 const (

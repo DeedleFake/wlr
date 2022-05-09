@@ -4,10 +4,17 @@ package wlr
 #include <wlr/types/wlr_surface.h>
 #include <wlr/types/wlr_xdg_shell.h>
 #include <wlr/xwayland.h>
+
+void _wlr_surface_for_each_cb(struct wlr_surface *surface, int sx, int sy, void *data);
+
+static inline void _wlr_surface_for_each_surface(struct wlr_surface *surface, void *user_data) {
+	wlr_surface_for_each_surface(surface, _wlr_surface_for_each_cb, user_data);
+}
 */
 import "C"
 
 import (
+	"runtime/cgo"
 	"time"
 	"unsafe"
 
@@ -65,8 +72,18 @@ func (s Surface) Pending() SurfaceState {
 	return SurfaceState{s: s.p.pending}
 }
 
-func (s Surface) Walk(visit func()) {
-	panic("not implemented")
+func (s Surface) ForEachSurface(cb func(Surface, int, int)) {
+	handle := cgo.NewHandle(cb)
+	C._wlr_surface_for_each_surface(s.p, unsafe.Pointer(&handle))
+}
+
+//export _wlr_surface_for_each_cb
+func _wlr_surface_for_each_cb(surface *C.struct_wlr_surface, sx C.int, sy C.int, data unsafe.Pointer) {
+	handle := *(*cgo.Handle)(data)
+	defer handle.Delete()
+
+	cb := handle.Value().(func(Surface, int, int))
+	cb(Surface{p: surface}, int(sx), int(sy))
 }
 
 func (s Surface) SendFrameDone(when time.Time) {

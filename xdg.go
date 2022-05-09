@@ -5,10 +5,10 @@ package wlr
 #include <wlr/types/wlr_xdg_shell.h>
 #include <wlr/types/wlr_xdg_output_v1.h>
 
-void _wlr_xdg_surface_for_each_cb(struct wlr_surface *surface, int sx, int sy, void *data);
+void _wlr_surface_for_each_cb(struct wlr_surface *surface, int sx, int sy, void *data);
 
 static inline void _wlr_xdg_surface_for_each_surface(struct wlr_xdg_surface *surface, void *user_data) {
-	wlr_xdg_surface_for_each_surface(surface, &_wlr_xdg_surface_for_each_cb, user_data);
+	wlr_xdg_surface_for_each_surface(surface, _wlr_surface_for_each_cb, user_data);
 }
 */
 import "C"
@@ -177,15 +177,6 @@ func (s XDGTopLevel) Valid() bool {
 
 func (t XDGTopLevel) Title() string {
 	return C.GoString(t.p.title)
-}
-
-//export _wlr_xdg_surface_for_each_cb
-func _wlr_xdg_surface_for_each_cb(surface *C.struct_wlr_surface, sx C.int, sy C.int, data unsafe.Pointer) {
-	handle := *(*cgo.Handle)(data)
-	defer handle.Delete()
-
-	cb := handle.Value().(func(Surface, int, int))
-	cb(Surface{p: surface}, int(sx), int(sy))
 }
 
 type XDGOutputManagerV1 struct {
