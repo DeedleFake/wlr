@@ -69,35 +69,35 @@ func (s Seat) SetKeyboard(dev InputDevice) {
 	C.wlr_seat_set_keyboard(s.p, dev.p)
 }
 
-func (s Seat) NotifyPointerButton(time time.Time, button uint32, state ButtonState) {
+func (s Seat) PointerNotifyButton(time time.Time, button uint32, state ButtonState) {
 	C.wlr_seat_pointer_notify_button(s.p, C.uint32_t(time.UnixMilli()), C.uint32_t(button), uint32(state))
 }
 
-func (s Seat) NotifyPointerAxis(time time.Time, orientation AxisOrientation, delta float64, deltaDiscrete int32, source AxisSource) {
+func (s Seat) PointerNotifyAxis(time time.Time, orientation AxisOrientation, delta float64, deltaDiscrete int32, source AxisSource) {
 	C.wlr_seat_pointer_notify_axis(s.p, C.uint32_t(time.UnixMilli()), C.enum_wlr_axis_orientation(orientation), C.double(delta), C.int32_t(deltaDiscrete), C.enum_wlr_axis_source(source))
 }
 
-func (s Seat) NotifyPointerEnter(surface Surface, sx float64, sy float64) {
+func (s Seat) PointerNotifyEnter(surface Surface, sx float64, sy float64) {
 	C.wlr_seat_pointer_notify_enter(s.p, surface.p, C.double(sx), C.double(sy))
 }
 
-func (s Seat) NotifyPointerMotion(time time.Time, sx float64, sy float64) {
+func (s Seat) PointerNotifyMotion(time time.Time, sx float64, sy float64) {
 	C.wlr_seat_pointer_notify_motion(s.p, C.uint32_t(time.UnixMilli()), C.double(sx), C.double(sy))
 }
 
-func (s Seat) NotifyPointerFrame() {
+func (s Seat) PointerNotifyFrame() {
 	C.wlr_seat_pointer_notify_frame(s.p)
 }
 
-func (s Seat) NotifyKeyboardEnter(surface Surface, k Keyboard) {
+func (s Seat) KeyboardNotifyEnter(surface Surface, k Keyboard) {
 	C.wlr_seat_keyboard_notify_enter(s.p, surface.p, &k.p.keycodes[0], k.p.num_keycodes, &k.p.modifiers)
 }
 
-func (s Seat) NotifyKeyboardModifiers(modifiers KeyboardModifiers) {
+func (s Seat) KeyboardNotifyModifiers(modifiers KeyboardModifiers) {
 	C.wlr_seat_keyboard_notify_modifiers(s.p, modifiers.p)
 }
 
-func (s Seat) NotifyKeyboardKey(time time.Time, keyCode uint32, state KeyState) {
+func (s Seat) KeyboardNotifyKey(time time.Time, keyCode uint32, state KeyState) {
 	C.wlr_seat_keyboard_notify_key(s.p, C.uint32_t(time.UnixMilli()), C.uint32_t(keyCode), C.uint32_t(state))
 }
 
