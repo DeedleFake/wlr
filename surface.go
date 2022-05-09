@@ -17,8 +17,6 @@ import (
 	"runtime/cgo"
 	"time"
 	"unsafe"
-
-	"golang.org/x/sys/unix"
 )
 
 type SurfaceType uint32
@@ -87,11 +85,10 @@ func _wlr_surface_for_each_cb(surface *C.struct_wlr_surface, sx C.int, sy C.int,
 }
 
 func (s Surface) SendFrameDone(when time.Time) {
-	// we ignore the returned error; the only possible error is
-	// ERANGE, when timespec on a platform has int32 precision, but
-	// our time requires 64 bits. This should not occur.
-	t, _ := unix.TimeToTimespec(when)
-	C.wlr_surface_send_frame_done(s.p, (*C.struct_timespec)(unsafe.Pointer(&t)))
+	C.wlr_surface_send_frame_done(s.p, &C.struct_timespec{
+		tv_sec:  C.long(when.Unix()),
+		tv_nsec: C.long(when.Nanosecond()),
+	})
 }
 
 func (s Surface) XDGSurface() XDGSurface {
