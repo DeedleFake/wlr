@@ -67,7 +67,7 @@ func (evl EventLoop) OnDestroy(cb func(EventLoop)) Listener {
 	lis := newListener(nil, func(lis Listener, data unsafe.Pointer) {
 		cb(evl)
 	})
-	C.wl_event_loop_add_destroy_listener(evl.p, lis.p)
+	C.wl_event_loop_add_destroy_listener(evl.p, &lis.p.lis)
 	return lis
 }
 

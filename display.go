@@ -27,7 +27,7 @@ func (d Display) OnDestroy(cb func(Display)) Listener {
 	lis := newListener(nil, func(lis Listener, data unsafe.Pointer) {
 		cb(d)
 	})
-	C.wl_display_add_destroy_listener(d.p, lis.p)
+	C.wl_display_add_destroy_listener(d.p, &lis.p.lis)
 	return lis
 }
 
