@@ -94,6 +94,14 @@ func _wlr_surface_for_each_cb(surface *C.struct_wlr_surface, sx C.int, sy C.int,
 	cb(Surface{p: surface}, int(sx), int(sy))
 }
 
+func (s Surface) SendEnter(output Output) {
+	C.wlr_surface_send_enter(s.p, output.p)
+}
+
+func (s Surface) SendLeave(output Output) {
+	C.wlr_surface_send_leave(s.p, output.p)
+}
+
 func (s Surface) SendFrameDone(when time.Time) {
 	ts := C._new_timespec(C.long(when.Unix()), C.long(when.Nanosecond()))
 	C.wlr_surface_send_frame_done(s.p, &ts)
