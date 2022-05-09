@@ -78,14 +78,14 @@ func (s Surface) Current() SurfaceState {
 
 func (s Surface) ForEachSurface(cb func(Surface, int, int)) {
 	handle := cgo.NewHandle(cb)
+	defer handle.Delete()
+
 	C._wlr_surface_for_each_surface(s.p, unsafe.Pointer(&handle))
 }
 
 //export _wlr_surface_for_each_cb
 func _wlr_surface_for_each_cb(surface *C.struct_wlr_surface, sx C.int, sy C.int, data unsafe.Pointer) {
 	handle := *(*cgo.Handle)(data)
-	defer handle.Delete()
-
 	cb := handle.Value().(func(Surface, int, int))
 	cb(Surface{p: surface}, int(sx), int(sy))
 }

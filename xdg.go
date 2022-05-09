@@ -68,6 +68,8 @@ func (s XDGSurface) Resource() Resource {
 
 func (s XDGSurface) ForEachSurface(cb func(Surface, int, int)) {
 	handle := cgo.NewHandle(cb)
+	defer handle.Delete()
+
 	C._wlr_xdg_surface_for_each_surface(s.p, unsafe.Pointer(&handle))
 }
 
