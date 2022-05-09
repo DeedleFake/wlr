@@ -120,6 +120,6 @@ func (s SurfaceState) Height() int {
 	return int(s.s.height)
 }
 
-func (s SurfaceState) Transform() uint32 {
-	return uint32(s.s.transform)
+func (s SurfaceState) Transform() OutputTransform {
+	return OutputTransform(s.s.transform)
 }

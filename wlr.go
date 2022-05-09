@@ -53,8 +53,8 @@ func copyMatrix[
 	}
 }
 
-func (m *Matrix) ProjectBox(box *Box, transform uint32, rotation float32, projection *Matrix) {
-	cm := m.toC()
+func ProjectBoxMatrix(box *Box, transform OutputTransform, rotation float32, projection *Matrix) *Matrix {
+	var cm [9]C.float
 	pm := projection.toC()
 	C.wlr_matrix_project_box(
 		&cm[0],
@@ -63,7 +63,7 @@ func (m *Matrix) ProjectBox(box *Box, transform uint32, rotation float32, projec
 		C.float(rotation),
 		&pm[0],
 	)
-	copyMatrix((*[9]float32)(m), &cm)
+	return matrixFromC(&cm)
 }
 
 func (m *Matrix) toC() [9]C.float {
