@@ -53,12 +53,12 @@ func copyMatrix[
 	}
 }
 
-func ProjectBoxMatrix(box *Box, transform OutputTransform, rotation float32, projection *Matrix) *Matrix {
+func ProjectBoxMatrix(box image.Rectangle, transform OutputTransform, rotation float32, projection *Matrix) *Matrix {
 	var cm [9]C.float
 	pm := projection.toC()
 	C.wlr_matrix_project_box(
 		&cm[0],
-		box.toC(),
+		boxToC(box),
 		C.enum_wl_output_transform(transform),
 		C.float(rotation),
 		&pm[0],
@@ -128,32 +128,6 @@ func (c Compositor) OnDestroy(cb func(Compositor)) Listener {
 	})
 }
 
-type Box struct {
-	X, Y, Width, Height int
-}
-
-func boxFromC(cb *C.struct_wlr_box) *Box {
-	if cb == nil {
-		return nil
-	}
-
-	return &Box{
-		X:      int(cb.x),
-		Y:      int(cb.y),
-		Width:  int(cb.width),
-		Height: int(cb.height),
-	}
-}
-
-func (b *Box) toC() *C.struct_wlr_box {
-	return &C.struct_wlr_box{
-		x:      C.int(b.X),
-		y:      C.int(b.Y),
-		width:  C.int(b.Width),
-		height: C.int(b.Height),
-	}
-}
-
 func colorToC(c color.Color) [4]C.float {
 	r, g, b, a := c.RGBA()
 	return [...]C.float{
@@ -162,6 +136,33 @@ func colorToC(c color.Color) [4]C.float {
 		C.float(b) / C.float(a),
 		C.float(a) / 0xFFFF,
 	}
+}
+
+func boxToC(r image.Rectangle) *C.struct_wlr_box {
+	if r == image.ZR {
+		return nil
+	}
+
+	r = r.Canon()
+	return &C.struct_wlr_box{
+		x:      C.int(r.Min.X),
+		y:      C.int(r.Min.Y),
+		width:  C.int(r.Dx()),
+		height: C.int(r.Dy()),
+	}
+}
+
+func boxFromC(box *C.struct_wlr_box) image.Rectangle {
+	if box == nil {
+		return image.ZR
+	}
+
+	return image.Rect(
+		int(box.x),
+		int(box.y),
+		int(box.x+box.width),
+		int(box.y+box.width),
+	)
 }
 
 func rectToC(r image.Rectangle) (cr C.pixman_region32_t) {

@@ -6,6 +6,7 @@ package wlr
 import "C"
 
 import (
+	"image"
 	"image/color"
 	"unsafe"
 )
@@ -51,12 +52,12 @@ func (r Renderer) RenderTextureWithMatrix(texture Texture, matrix *Matrix, alpha
 	C.wlr_render_texture_with_matrix(r.p, texture.p, &m[0], C.float(alpha))
 }
 
-func (r *Renderer) RenderRect(box *Box, c color.Color, projection *Matrix) {
+func (r *Renderer) RenderRect(box image.Rectangle, c color.Color, projection *Matrix) {
 	cc := colorToC(c)
 	pm := projection.toC()
 	C.wlr_render_rect(
 		r.p,
-		box.toC(),
+		boxToC(box),
 		&cc[0],
 		&pm[0],
 	)

@@ -14,6 +14,7 @@ static inline void _wlr_xdg_surface_for_each_surface(struct wlr_xdg_surface *sur
 import "C"
 
 import (
+	"image"
 	"runtime/cgo"
 	"unsafe"
 )
@@ -145,7 +146,7 @@ func (s XDGSurface) OnNewPopup(cb func(XDGSurface, XDGPopup)) Listener {
 	})
 }
 
-func (s XDGSurface) Geometry() *Box {
+func (s XDGSurface) Geometry() image.Rectangle {
 	var cb C.struct_wlr_box
 	C.wlr_xdg_surface_get_geometry(s.p, &cb)
 	return boxFromC(&cb)
