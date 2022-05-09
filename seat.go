@@ -74,7 +74,7 @@ func (s Seat) GetKeyboard() Keyboard {
 	return Keyboard{p: p}
 }
 
-func (s Seat) PointerNotifyButton(time time.Time, button uint32, state ButtonState) {
+func (s Seat) PointerNotifyButton(time time.Time, button CursorButton, state ButtonState) {
 	C.wlr_seat_pointer_notify_button(s.p, C.uint32_t(time.UnixMilli()), C.uint32_t(button), uint32(state))
 }
 

@@ -1,6 +1,8 @@
 package wlr
 
 /*
+#include <linux/input-event-codes.h>
+
 #include <wayland-server-core.h>
 #include <wlr/types/wlr_cursor.h>
 #include <wlr/types/wlr_pointer.h>
@@ -69,11 +71,11 @@ func (c Cursor) OnMotionAbsolute(cb func(dev InputDevice, time time.Time, x, y f
 	})
 }
 
-func (c Cursor) OnButton(cb func(dev InputDevice, time time.Time, button uint32, state ButtonState)) Listener {
+func (c Cursor) OnButton(cb func(dev InputDevice, time time.Time, button CursorButton, state ButtonState)) Listener {
 	return newListener(&c.p.events.button, func(lis Listener, data unsafe.Pointer) {
 		event := (*C.struct_wlr_event_pointer_button)(data)
 		dev := InputDevice{p: event.device}
-		cb(dev, time.UnixMilli(int64(event.time_msec)), uint32(event.button), ButtonState(event.state))
+		cb(dev, time.UnixMilli(int64(event.time_msec)), CursorButton(event.button), ButtonState(event.state))
 	})
 }
 
@@ -97,3 +99,11 @@ func (c Cursor) OnFrame(cb func()) Listener {
 		cb()
 	})
 }
+
+type CursorButton uint32
+
+const (
+	BtnLeft   CursorButton = C.BTN_LEFT
+	BtnRight  CursorButton = C.BTN_RIGHT
+	BtnMiddle CursorButton = C.BTN_MIDDLE
+)
