@@ -96,8 +96,8 @@ const (
 type ButtonState uint32
 
 const (
-	ButtonStateReleased ButtonState = C.WLR_BUTTON_RELEASED
-	ButtonStatePressed  ButtonState = C.WLR_BUTTON_PRESSED
+	ButtonReleased ButtonState = C.WLR_BUTTON_RELEASED
+	ButtonPressed  ButtonState = C.WLR_BUTTON_PRESSED
 )
 
 type AxisSource uint32
