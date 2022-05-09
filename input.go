@@ -66,6 +66,10 @@ func (k Keyboard) Modifiers() KeyboardModifiers {
 	return KeyboardModifiers{p: &k.p.modifiers}
 }
 
+func (k Keyboard) Keycodes() []uint32 {
+	return unsafe.Slice((*uint32)(&k.p.keycodes[0]), k.p.num_keycodes)
+}
+
 func (k Keyboard) OnModifiers(cb func(keyboard Keyboard)) Listener {
 	return newListener(&k.p.events.modifiers, func(lis Listener, data unsafe.Pointer) {
 		cb(k)

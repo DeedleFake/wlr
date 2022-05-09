@@ -53,6 +53,11 @@ type XDGSurface struct {
 	p *C.struct_wlr_xdg_surface
 }
 
+func XDGSurfaceFromWLRSurface(surface Surface) XDGSurface {
+	p := C.wlr_xdg_surface_from_wlr_surface(surface.p)
+	return XDGSurface{p: p}
+}
+
 func (s XDGSurface) Valid() bool {
 	return s.p != nil
 }

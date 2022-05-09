@@ -107,11 +107,6 @@ func (s Surface) SendFrameDone(when time.Time) {
 	C.wlr_surface_send_frame_done(s.p, &ts)
 }
 
-func (s Surface) XDGSurface() XDGSurface {
-	p := C.wlr_xdg_surface_from_wlr_surface(s.p)
-	return XDGSurface{p: p}
-}
-
 func (s Surface) XWaylandSurface() XWaylandSurface {
 	p := C.wlr_xwayland_surface_from_wlr_surface(s.p)
 	return XWaylandSurface{p: p}

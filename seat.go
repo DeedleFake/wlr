@@ -69,6 +69,11 @@ func (s Seat) SetKeyboard(dev InputDevice) {
 	C.wlr_seat_set_keyboard(s.p, dev.p)
 }
 
+func (s Seat) GetKeyboard() Keyboard {
+	p := C.wlr_seat_get_keyboard(s.p)
+	return Keyboard{p: p}
+}
+
 func (s Seat) PointerNotifyButton(time time.Time, button uint32, state ButtonState) {
 	C.wlr_seat_pointer_notify_button(s.p, C.uint32_t(time.UnixMilli()), C.uint32_t(button), uint32(state))
 }
@@ -89,8 +94,13 @@ func (s Seat) PointerNotifyFrame() {
 	C.wlr_seat_pointer_notify_frame(s.p)
 }
 
-func (s Seat) KeyboardNotifyEnter(surface Surface, k Keyboard) {
-	C.wlr_seat_keyboard_notify_enter(s.p, surface.p, &k.p.keycodes[0], k.p.num_keycodes, &k.p.modifiers)
+func (s Seat) KeyboardNotifyEnter(surface Surface, keycodes []uint32, modifiers KeyboardModifiers) {
+	var kc *C.uint32_t
+	if len(keycodes) > 0 {
+		kc = (*C.uint32_t)(&keycodes[0])
+	}
+
+	C.wlr_seat_keyboard_notify_enter(s.p, surface.p, kc, C.size_t(len(keycodes)), modifiers.p)
 }
 
 func (s Seat) KeyboardNotifyModifiers(modifiers KeyboardModifiers) {
