@@ -1,7 +1,7 @@
 package wlr
 
 /*
-#cgo pkg-config: wlroots wayland-server
+#cgo pkg-config: wlroots wayland-server pixman-1
 #cgo CFLAGS: -D_GNU_SOURCE -DWLR_USE_UNSTABLE
 
 #include <stdarg.h>
@@ -19,6 +19,8 @@ package wlr
 import "C"
 
 import (
+	"image"
+	"image/color"
 	"time"
 	"unsafe"
 )
@@ -113,26 +115,6 @@ func (c Compositor) OnDestroy(cb func(Compositor)) Listener {
 	})
 }
 
-type Color struct {
-	R, G, B, A float32
-}
-
-func (c *Color) Set(r, g, b, a float32) {
-	c.R = r
-	c.G = g
-	c.B = b
-	c.A = a
-}
-
-func (c *Color) toC() [4]C.float {
-	return [...]C.float{
-		C.float(c.R),
-		C.float(c.G),
-		C.float(c.B),
-		C.float(c.A),
-	}
-}
-
 type Box struct {
 	X, Y, Width, Height int
 }
@@ -158,4 +140,26 @@ func (b *Box) fromC(cb *C.struct_wlr_box) {
 	b.Y = int(cb.y)
 	b.Width = int(cb.width)
 	b.Height = int(cb.height)
+}
+
+func colorToC(c color.Color) [4]C.float {
+	r, g, b, a := c.RGBA()
+	return [...]C.float{
+		C.float(r) / C.float(a),
+		C.float(g) / C.float(a),
+		C.float(b) / C.float(a),
+		C.float(a) / 0xFFFF,
+	}
+}
+
+func rectToC(r image.Rectangle) (cr C.pixman_region32_t) {
+	r = r.Canon()
+	C.pixman_region32_init_rect(
+		&cr,
+		C.int(r.Min.X),
+		C.int(r.Max.Y),
+		C.uint(r.Dx()),
+		C.uint(r.Dy()),
+	)
+	return
 }

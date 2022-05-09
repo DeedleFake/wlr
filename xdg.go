@@ -14,7 +14,7 @@ static inline void _wlr_xdg_surface_for_each_surface(struct wlr_xdg_surface *sur
 import "C"
 
 import (
-	"sync"
+	"runtime/cgo"
 	"unsafe"
 )
 
@@ -24,11 +24,6 @@ const (
 	XDGSurfaceRoleNone     XDGSurfaceRole = C.WLR_XDG_SURFACE_ROLE_NONE
 	XDGSurfaceRoleTopLevel XDGSurfaceRole = C.WLR_XDG_SURFACE_ROLE_TOPLEVEL
 	XDGSurfaceRolePopup    XDGSurfaceRole = C.WLR_XDG_SURFACE_ROLE_POPUP
-)
-
-var (
-	xdgSurfaceWalkers      = map[*C.struct_wlr_xdg_surface]XDGSurfaceWalkFunc{}
-	xdgSurfaceWalkersMutex sync.RWMutex
 )
 
 type XDGSurfaceWalkFunc func(surface Surface, sx int, sy int)
@@ -62,16 +57,9 @@ func (s XDGSurface) Valid() bool {
 	return s.p != nil
 }
 
-func (s XDGSurface) Walk(visit XDGSurfaceWalkFunc) {
-	xdgSurfaceWalkersMutex.Lock()
-	xdgSurfaceWalkers[s.p] = visit
-	xdgSurfaceWalkersMutex.Unlock()
-
-	C._wlr_xdg_surface_for_each_surface(s.p, unsafe.Pointer(s.p))
-
-	xdgSurfaceWalkersMutex.Lock()
-	delete(xdgSurfaceWalkers, s.p)
-	xdgSurfaceWalkersMutex.Unlock()
+func (s XDGSurface) ForEachSurface(cb func(Surface, int, int)) {
+	handle := cgo.NewHandle(cb)
+	C._wlr_xdg_surface_for_each_surface(s.p, unsafe.Pointer(&handle))
 }
 
 func (s XDGSurface) Role() XDGSurfaceRole {
@@ -155,6 +143,10 @@ func (s XDGSurface) Geometry() Box {
 	return b
 }
 
+func (s XDGSurface) Mapped() bool {
+	return bool(s.p.mapped)
+}
+
 type XDGPopup struct {
 	p *C.struct_wlr_xdg_popup
 }
@@ -189,12 +181,11 @@ func (t XDGTopLevel) Title() string {
 
 //export _wlr_xdg_surface_for_each_cb
 func _wlr_xdg_surface_for_each_cb(surface *C.struct_wlr_surface, sx C.int, sy C.int, data unsafe.Pointer) {
-	xdgSurfaceWalkersMutex.RLock()
-	cb := xdgSurfaceWalkers[(*C.struct_wlr_xdg_surface)(data)]
-	xdgSurfaceWalkersMutex.RUnlock()
-	if cb != nil {
-		cb(Surface{p: surface}, int(sx), int(sy))
-	}
+	handle := *(*cgo.Handle)(data)
+	defer handle.Delete()
+
+	cb := handle.Value().(func(Surface, int, int))
+	cb(Surface{p: surface}, int(sx), int(sy))
 }
 
 type XDGOutputManagerV1 struct {

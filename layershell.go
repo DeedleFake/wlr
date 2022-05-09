@@ -31,3 +31,12 @@ func (ls LayerShellV1) OnNewSurface(cb func(LayerSurfaceV1)) Listener {
 type LayerSurfaceV1 struct {
 	p *C.struct_wlr_layer_surface_v1
 }
+
+type LayerShellV1Layer int
+
+const (
+	LayerShellV1LayerBackground LayerShellV1Layer = C.ZWLR_LAYER_SHELL_V1_LAYER_BACKGROUND
+	LayerShellV1LayerBottom     LayerShellV1Layer = C.ZWLR_LAYER_SHELL_V1_LAYER_BOTTOM
+	LayerShellV1LayerTop        LayerShellV1Layer = C.ZWLR_LAYER_SHELL_V1_LAYER_TOP
+	LayerShellV1LayerOverlay    LayerShellV1Layer = C.ZWLR_LAYER_SHELL_V1_LAYER_OVERLAY
+)

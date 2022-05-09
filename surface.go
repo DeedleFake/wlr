@@ -26,10 +26,6 @@ type Surface struct {
 	p *C.struct_wlr_surface
 }
 
-type SurfaceState struct {
-	s C.struct_wlr_surface_state
-}
-
 func (s Surface) Valid() bool {
 	return s.p != nil
 }
@@ -61,8 +57,12 @@ func (s Surface) Texture() Texture {
 	return Texture{p: p}
 }
 
-func (s Surface) CurrentState() SurfaceState {
+func (s Surface) Current() SurfaceState {
 	return SurfaceState{s: s.p.current}
+}
+
+func (s Surface) Pending() SurfaceState {
+	return SurfaceState{s: s.p.pending}
 }
 
 func (s Surface) Walk(visit func()) {
@@ -85,6 +85,10 @@ func (s Surface) XDGSurface() XDGSurface {
 func (s Surface) XWaylandSurface() XWaylandSurface {
 	p := C.wlr_xwayland_surface_from_wlr_surface(s.p)
 	return XWaylandSurface{p: p}
+}
+
+type SurfaceState struct {
+	s C.struct_wlr_surface_state
 }
 
 func (s SurfaceState) Width() int {

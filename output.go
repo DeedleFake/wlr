@@ -10,6 +10,7 @@ import "C"
 
 import (
 	"errors"
+	"image"
 	"unsafe"
 )
 
@@ -55,8 +56,13 @@ func (o Output) OnFrame(cb func(Output)) Listener {
 	})
 }
 
-func (o Output) RenderSoftwareCursors() {
-	C.wlr_output_render_software_cursors(o.p, nil)
+func (o Output) RenderSoftwareCursors(damage image.Rectangle) {
+	var cd *C.pixman_region32_t
+	if damage != image.ZR {
+		t := rectToC(damage)
+		cd = &t
+	}
+	C.wlr_output_render_software_cursors(o.p, cd)
 }
 
 func (o Output) TransformedResolution() (int, int) {
@@ -135,6 +141,14 @@ func (o Output) SetTitle(title string) error {
 func (o Output) PreferredMode() OutputMode {
 	p := C.wlr_output_preferred_mode(o.p)
 	return OutputMode{p: p}
+}
+
+func (o Output) Width() int {
+	return int(o.p.width)
+}
+
+func (o Output) Height() int {
+	return int(o.p.height)
 }
 
 type OutputLayout struct {
