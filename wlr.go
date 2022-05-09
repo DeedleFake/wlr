@@ -23,6 +23,8 @@ import (
 	"image/color"
 	"time"
 	"unsafe"
+
+	"golang.org/x/exp/constraints"
 )
 
 type Edges uint32
@@ -37,26 +39,37 @@ const (
 
 type Matrix [9]float32
 
+func matrixFromC(cm *[9]C.float) *Matrix {
+	var m Matrix
+	copyMatrix((*[9]float32)(&m), cm)
+	return &m
+}
+
+func copyMatrix[
+	Out, In constraints.Integer | constraints.Float,
+](out *[9]Out, in *[9]In) {
+	for i := range out {
+		out[i] = Out(in[i])
+	}
+}
+
 func (m *Matrix) ProjectBox(box *Box, transform uint32, rotation float32, projection *Matrix) {
 	cm := m.toC()
-	b := box.toC()
 	pm := projection.toC()
-	C.wlr_matrix_project_box(&cm[0], &b, C.enum_wl_output_transform(transform), C.float(rotation), &pm[0])
-	m.fromC(&cm)
+	C.wlr_matrix_project_box(
+		&cm[0],
+		box.toC(),
+		C.enum_wl_output_transform(transform),
+		C.float(rotation),
+		&pm[0],
+	)
+	copyMatrix((*[9]float32)(m), &cm)
 }
 
 func (m *Matrix) toC() [9]C.float {
 	var cm [9]C.float
-	for i := range m {
-		cm[i] = C.float(m[i])
-	}
+	copyMatrix(&cm, (*[9]float32)(m))
 	return cm
-}
-
-func (m *Matrix) fromC(cm *[9]C.float) {
-	for i := range cm {
-		m[i] = float32(cm[i])
-	}
 }
 
 type EventLoop struct {
@@ -119,27 +132,26 @@ type Box struct {
 	X, Y, Width, Height int
 }
 
-func (b *Box) Set(x, y, width, height int) {
-	b.X = x
-	b.Y = y
-	b.Width = width
-	b.Height = height
+func boxFromC(cb *C.struct_wlr_box) *Box {
+	if cb == nil {
+		return nil
+	}
+
+	return &Box{
+		X:      int(cb.x),
+		Y:      int(cb.y),
+		Width:  int(cb.width),
+		Height: int(cb.height),
+	}
 }
 
-func (b *Box) toC() C.struct_wlr_box {
-	return C.struct_wlr_box{
+func (b *Box) toC() *C.struct_wlr_box {
+	return &C.struct_wlr_box{
 		x:      C.int(b.X),
 		y:      C.int(b.Y),
 		width:  C.int(b.Width),
 		height: C.int(b.Height),
 	}
-}
-
-func (b *Box) fromC(cb *C.struct_wlr_box) {
-	b.X = int(cb.x)
-	b.Y = int(cb.y)
-	b.Width = int(cb.width)
-	b.Height = int(cb.height)
 }
 
 func colorToC(c color.Color) [4]C.float {
