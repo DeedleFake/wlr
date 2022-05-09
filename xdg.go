@@ -143,13 +143,10 @@ func (s XDGSurface) OnNewPopup(cb func(XDGSurface, XDGPopup)) Listener {
 	})
 }
 
-func (s XDGSurface) Geometry() Box {
+func (s XDGSurface) Geometry() *Box {
 	var cb C.struct_wlr_box
 	C.wlr_xdg_surface_get_geometry(s.p, &cb)
-
-	var b Box
-	b.fromC(&cb)
-	return b
+	return boxFromC(&cb)
 }
 
 func (s XDGSurface) Mapped() bool {
@@ -186,6 +183,18 @@ func (s XDGTopLevel) Valid() bool {
 
 func (t XDGTopLevel) Title() string {
 	return C.GoString(t.p.title)
+}
+
+func (t XDGTopLevel) Current() XDGTopLevelState {
+	return XDGTopLevelState{v: t.p.current}
+}
+
+type XDGTopLevelState struct {
+	v C.struct_wlr_xdg_toplevel_state
+}
+
+func (s XDGTopLevelState) Activated() bool {
+	return bool(s.v.activated)
 }
 
 type XDGOutputManagerV1 struct {

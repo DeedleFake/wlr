@@ -44,10 +44,8 @@ func (o Output) SetTransform(transform OutputTransform) {
 	C.wlr_output_set_transform(o.p, C.enum_wl_output_transform(transform))
 }
 
-func (o Output) TransformMatrix() Matrix {
-	var matrix Matrix
-	matrix.fromC(&o.p.transform_matrix)
-	return matrix
+func (o Output) TransformMatrix() *Matrix {
+	return matrixFromC(&o.p.transform_matrix)
 }
 
 func (o Output) OnFrame(cb func(Output)) Listener {
@@ -172,7 +170,7 @@ func (l OutputLayout) Add(output Output, lx, ly int) {
 	C.wlr_output_layout_add(l.p, output.p, C.int(lx), C.int(ly))
 }
 
-func (l OutputLayout) Coords(output Output) (x float64, y float64) {
+func (l OutputLayout) OutputCoords(output Output) (x float64, y float64) {
 	var ox, oy C.double
 	C.wlr_output_layout_output_coords(l.p, output.p, &ox, &oy)
 	return float64(ox), float64(oy)

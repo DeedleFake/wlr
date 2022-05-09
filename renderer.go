@@ -52,8 +52,12 @@ func (r Renderer) RenderTextureWithMatrix(texture Texture, matrix *Matrix, alpha
 }
 
 func (r *Renderer) RenderRect(box *Box, c color.Color, projection *Matrix) {
-	b := box.toC()
 	cc := colorToC(c)
 	pm := projection.toC()
-	C.wlr_render_rect(r.p, &b, &cc[0], &pm[0])
+	C.wlr_render_rect(
+		r.p,
+		box.toC(),
+		&cc[0],
+		&pm[0],
+	)
 }
