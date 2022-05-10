@@ -61,6 +61,10 @@ func (s Seat) OnRequestSetCursor(cb func(client SeatClient, surface Surface, ser
 	})
 }
 
+func (s Seat) Capabilities() SeatCapability {
+	return SeatCapability(s.p.capabilities)
+}
+
 func (s Seat) SetCapabilities(caps SeatCapability) {
 	C.wlr_seat_set_capabilities(s.p, C.uint32_t(caps))
 }
