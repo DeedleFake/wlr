@@ -115,8 +115,8 @@ func (s Seat) KeyboardNotifyKey(time time.Time, keyCode uint32, state KeyState) 
 	C.wlr_seat_keyboard_notify_key(s.p, C.uint32_t(time.UnixMilli()), C.uint32_t(keyCode), C.uint32_t(state))
 }
 
-func (s Seat) PointerClearFocus() {
-	C.wlr_seat_pointer_clear_focus(s.p)
+func (s Seat) PointerNotifyClearFocus() {
+	C.wlr_seat_pointer_notify_clear_focus(s.p)
 }
 
 func (s Seat) Keyboard() Keyboard {
