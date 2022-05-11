@@ -30,3 +30,11 @@ func (t Texture) Destroy() {
 func (t Texture) Valid() bool {
 	return t.p != nil
 }
+
+func (t Texture) Width() int {
+	return int(t.p.width)
+}
+
+func (t Texture) Height() int {
+	return int(t.p.height)
+}
