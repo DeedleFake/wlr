@@ -146,7 +146,7 @@ func (s XDGSurface) OnNewPopup(cb func(XDGSurface, XDGPopup)) Listener {
 	})
 }
 
-func (s XDGSurface) Geometry() image.Rectangle {
+func (s XDGSurface) GetGeometry() image.Rectangle {
 	var cb C.struct_wlr_box
 	C.wlr_xdg_surface_get_geometry(s.p, &cb)
 	return boxFromC(&cb)
