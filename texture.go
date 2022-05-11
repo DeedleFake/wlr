@@ -5,7 +5,12 @@ package wlr
 */
 import "C"
 
-import "unsafe"
+import (
+	"image"
+	"unsafe"
+
+	"golang.org/x/image/draw"
+)
 
 type Texture struct {
 	p *C.struct_wlr_texture
@@ -21,6 +26,23 @@ func TextureFromPixels(renderer Renderer, fmt, stride, width, height uint32, dat
 		unsafe.Pointer(&data[0]), // TODO: Does this need to be allocated by C?
 	)
 	return Texture{p: p}
+}
+
+func TextureFromImage(renderer Renderer, img image.Image) Texture {
+	nrgba, ok := img.(*image.NRGBA)
+	if !ok {
+		nrgba = image.NewNRGBA(img.Bounds())
+		draw.Copy(nrgba, image.ZP, img, nrgba.Bounds(), draw.Src, nil)
+	}
+
+	return TextureFromPixels(
+		renderer,
+		uint32('A'|('R'<<8)|('2'<<16)|('4'<<24)),
+		uint32(nrgba.Stride),
+		uint32(nrgba.Bounds().Dx()),
+		uint32(nrgba.Bounds().Dy()),
+		nrgba.Pix,
+	)
 }
 
 func (t Texture) Destroy() {
