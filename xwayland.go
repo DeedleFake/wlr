@@ -11,10 +11,6 @@ type XWayland struct {
 	p *C.struct_wlr_xwayland
 }
 
-type XWaylandSurface struct {
-	p *C.struct_wlr_xwayland_surface
-}
-
 func CreateXWayland(display Display, compositor Compositor, lazy bool) XWayland {
 	p := C.wlr_xwayland_create(display.p, compositor.p, C.bool(lazy))
 	return XWayland{p: p}
@@ -22,6 +18,10 @@ func CreateXWayland(display Display, compositor Compositor, lazy bool) XWayland 
 
 func (x XWayland) Destroy() {
 	C.wlr_xwayland_destroy(x.p)
+}
+
+func (x XWayland) Server() XWaylandServer {
+	return XWaylandServer{p: x.p.server}
 }
 
 func (x XWayland) OnNewSurface(cb func(XWaylandSurface)) Listener {
@@ -34,8 +34,40 @@ func (x XWayland) SetCursor(img XCursorImage) {
 	C.wlr_xwayland_set_cursor(x.p, img.p.buffer, img.p.width*4, img.p.width, img.p.height, C.int32_t(img.p.hotspot_x), C.int32_t(img.p.hotspot_y))
 }
 
+type XWaylandSurface struct {
+	p *C.struct_wlr_xwayland_surface
+}
+
+func (s XWaylandSurface) Valid() bool {
+	return s.p != nil
+}
+
+func (s XWaylandSurface) Mapped() bool {
+	return bool(s.p.mapped)
+}
+
+func (s XWaylandSurface) Width() int {
+	return int(s.p.width)
+}
+
+func (s XWaylandSurface) Height() int {
+	return int(s.p.height)
+}
+
+func (s XWaylandSurface) Title() string {
+	return C.GoString(s.p.title)
+}
+
 func (s XWaylandSurface) Surface() Surface {
 	return Surface{p: s.p.surface}
+}
+
+func (s XWaylandSurface) Close() {
+	C.wlr_xwayland_surface_close(s.p)
+}
+
+func (s XWaylandSurface) Activate(a bool) {
+	C.wlr_xwayland_surface_activate(s.p, C.bool(a))
 }
 
 func (s XWaylandSurface) Configure(x int16, y int16, width uint16, height uint16) {
@@ -78,4 +110,12 @@ func (s XWaylandSurface) OnRequestConfigure(cb func(surface XWaylandSurface, x i
 		event := (*C.struct_wlr_xwayland_surface_configure_event)(data)
 		cb(s, int16(event.x), int16(event.y), uint16(event.width), uint16(event.height))
 	})
+}
+
+type XWaylandServer struct {
+	p *C.struct_wlr_xwayland_server
+}
+
+func (s XWaylandServer) DisplayName() string {
+	return C.GoString(&s.p.display_name[0])
 }
