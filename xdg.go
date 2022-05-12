@@ -168,19 +168,25 @@ type XDGTopLevel struct {
 	p *C.struct_wlr_xdg_toplevel
 }
 
-func (t XDGTopLevel) OnRequestMove(cb func(client SeatClient, serial uint32)) Listener {
+func (t XDGTopLevel) OnRequestMove(cb func(t XDGTopLevel, client SeatClient, serial uint32)) Listener {
 	return newListener(&t.p.events.request_move, func(lis Listener, data unsafe.Pointer) {
 		event := (*C.struct_wlr_xdg_toplevel_move_event)(data)
 		client := SeatClient{p: event.seat}
-		cb(client, uint32(event.serial))
+		cb(t, client, uint32(event.serial))
 	})
 }
 
-func (t XDGTopLevel) OnRequestResize(cb func(client SeatClient, serial uint32, edges Edges)) Listener {
+func (t XDGTopLevel) OnRequestResize(cb func(t XDGTopLevel, client SeatClient, serial uint32, edges Edges)) Listener {
 	return newListener(&t.p.events.request_resize, func(lis Listener, data unsafe.Pointer) {
 		event := (*C.struct_wlr_xdg_toplevel_resize_event)(data)
 		client := SeatClient{p: event.seat}
-		cb(client, uint32(event.serial), Edges(event.edges))
+		cb(t, client, uint32(event.serial), Edges(event.edges))
+	})
+}
+
+func (t XDGTopLevel) OnRequestMinimize(cb func(XDGTopLevel)) Listener {
+	return newListener(&t.p.events.request_minimize, func(lis Listener, data unsafe.Pointer) {
+		cb(t)
 	})
 }
 

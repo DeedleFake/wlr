@@ -105,6 +105,12 @@ func (s XWaylandSurface) OnRequestResize(cb func(surface XWaylandSurface, edges 
 	})
 }
 
+func (s XWaylandSurface) OnRequestMinimize(cb func(surface XWaylandSurface)) Listener {
+	return newListener(&s.p.events.request_minimize, func(lis Listener, data unsafe.Pointer) {
+		cb(s)
+	})
+}
+
 func (s XWaylandSurface) OnRequestConfigure(cb func(surface XWaylandSurface, x int16, y int16, width uint16, height uint16)) Listener {
 	return newListener(&s.p.events.request_configure, func(lis Listener, data unsafe.Pointer) {
 		event := (*C.struct_wlr_xwayland_surface_configure_event)(data)
