@@ -70,6 +70,14 @@ func (s XWaylandSurface) Activate(a bool) {
 	C.wlr_xwayland_surface_activate(s.p, C.bool(a))
 }
 
+func (s XWaylandSurface) SetMinimized(minimized bool) {
+	C.wlr_xwayland_surface_set_minimized(s.p, C.bool(minimized))
+}
+
+func (s XWaylandSurface) SetMaximized(maximized bool) {
+	C.wlr_xwayland_surface_set_maximized(s.p, C.bool(maximized))
+}
+
 func (s XWaylandSurface) Configure(x int16, y int16, width uint16, height uint16) {
 	C.wlr_xwayland_surface_configure(s.p, C.int16_t(x), C.int16_t(y), C.uint16_t(width), C.uint16_t(height))
 }
@@ -107,6 +115,12 @@ func (s XWaylandSurface) OnRequestResize(cb func(surface XWaylandSurface, edges 
 
 func (s XWaylandSurface) OnRequestMinimize(cb func(surface XWaylandSurface)) Listener {
 	return newListener(&s.p.events.request_minimize, func(lis Listener, data unsafe.Pointer) {
+		cb(s)
+	})
+}
+
+func (s XWaylandSurface) OnRequestMaximize(cb func(surface XWaylandSurface)) Listener {
+	return newListener(&s.p.events.request_maximize, func(lis Listener, data unsafe.Pointer) {
 		cb(s)
 	})
 }

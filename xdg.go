@@ -99,6 +99,10 @@ func (s XDGSurface) TopLevelSetTiled(edges Edges) {
 	C.wlr_xdg_toplevel_set_tiled(s.p, C.uint32_t(edges))
 }
 
+func (s XDGSurface) TopLevelSetMaximized(maximized bool) {
+	C.wlr_xdg_toplevel_set_maximized(s.p, C.bool(maximized))
+}
+
 func (s XDGSurface) SendClose() {
 	C.wlr_xdg_toplevel_send_close(s.p)
 }
@@ -186,6 +190,12 @@ func (t XDGTopLevel) OnRequestResize(cb func(t XDGTopLevel, client SeatClient, s
 
 func (t XDGTopLevel) OnRequestMinimize(cb func(XDGTopLevel)) Listener {
 	return newListener(&t.p.events.request_minimize, func(lis Listener, data unsafe.Pointer) {
+		cb(t)
+	})
+}
+
+func (t XDGTopLevel) OnRequestMaximize(cb func(XDGTopLevel)) Listener {
+	return newListener(&t.p.events.request_maximize, func(lis Listener, data unsafe.Pointer) {
 		cb(t)
 	})
 }
