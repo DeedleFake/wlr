@@ -61,10 +61,10 @@ func (s Surface) Type() SurfaceType {
 	return SurfaceTypeNone
 }
 
-func (s Surface) SurfaceAt(sx float64, sy float64) (surface Surface, subX float64, subY float64) {
+func (s Surface) SurfaceAt(sx float64, sy float64) (surface Surface, subX, subY float64, ok bool) {
 	var csubX, csubY C.double
 	p := C.wlr_surface_surface_at(s.p, C.double(sx), C.double(sy), &csubX, &csubY)
-	return Surface{p: p}, float64(csubX), float64(csubY)
+	return Surface{p: p}, float64(csubX), float64(csubY), p != nil
 }
 
 func (s Surface) GetTexture() Texture {
