@@ -37,7 +37,7 @@ func TextureFromImage(renderer Renderer, img image.Image) Texture {
 
 	return TextureFromPixels(
 		renderer,
-		uint32('A'|('R'<<8)|('2'<<16)|('4'<<24)),
+		uint32('A'|('B'<<8)|('2'<<16)|('4'<<24)),
 		uint32(nrgba.Stride),
 		uint32(nrgba.Bounds().Dx()),
 		uint32(nrgba.Bounds().Dy()),
