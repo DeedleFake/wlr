@@ -87,6 +87,10 @@ func (s XDGSurface) TopLevelSetActivated(activated bool) {
 	C.wlr_xdg_toplevel_set_activated(s.p, C.bool(activated))
 }
 
+func (s XDGSurface) TopLevelSetResizing(resizing bool) {
+	C.wlr_xdg_toplevel_set_resizing(s.p, C.bool(resizing))
+}
+
 func (s XDGSurface) TopLevelSetSize(width uint32, height uint32) {
 	C.wlr_xdg_toplevel_set_size(s.p, C.uint32_t(width), C.uint32_t(height))
 }
