@@ -62,3 +62,7 @@ func (d ServerDecoration) OnMode(cb func(ServerDecoration)) Listener {
 func (d ServerDecoration) Mode() ServerDecorationManagerMode {
 	return ServerDecorationManagerMode(d.p.mode)
 }
+
+func (d ServerDecoration) Surface() Surface {
+	return Surface{p: d.p.surface}
+}
