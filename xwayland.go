@@ -132,6 +132,12 @@ func (s XWaylandSurface) OnRequestConfigure(cb func(surface XWaylandSurface, x i
 	})
 }
 
+func (s XWaylandSurface) OnSetTitle(cb func(XWaylandSurface, string)) Listener {
+	return newListener(&s.p.events.set_title, func(lis Listener, data unsafe.Pointer) {
+		cb(s, C.GoString((*C.char)(data)))
+	})
+}
+
 type XWaylandServer struct {
 	p *C.struct_wlr_xwayland_server
 }

@@ -200,6 +200,12 @@ func (t XDGTopLevel) OnRequestMaximize(cb func(XDGTopLevel)) Listener {
 	})
 }
 
+func (t XDGTopLevel) OnSetTitle(cb func(XDGTopLevel, string)) Listener {
+	return newListener(&t.p.events.set_title, func(lis Listener, data unsafe.Pointer) {
+		cb(t, C.GoString((*C.char)(data)))
+	})
+}
+
 func (s XDGTopLevel) Valid() bool {
 	return s.p != nil
 }
