@@ -14,6 +14,10 @@ func AutocreateAllocator(backend Backend, renderer Renderer) Allocator {
 	return Allocator{p: p}
 }
 
+func (a Allocator) Valid() bool {
+	return a.p != nil
+}
+
 func (a Allocator) Destroy() {
 	C.wlr_allocator_destroy(a.p)
 }

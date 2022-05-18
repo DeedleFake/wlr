@@ -34,6 +34,10 @@ func (r Renderer) InitWLDisplay(display Display) {
 	C.wlr_renderer_init_wl_display(r.p, display.p)
 }
 
+func (r Renderer) InitWLSHM(display Display) {
+	C.wlr_renderer_init_wl_shm(r.p, display.p)
+}
+
 func (r Renderer) Begin(output Output, width int, height int) {
 	C.wlr_renderer_begin(r.p, C.uint(width), C.uint(height))
 }

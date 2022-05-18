@@ -22,6 +22,10 @@ func AutocreateBackend(display Display) Backend {
 	return Backend{p: p}
 }
 
+func (b Backend) Valid() bool {
+	return b.p != nil
+}
+
 func (b Backend) Destroy() {
 	C.wlr_backend_destroy(b.p)
 }
