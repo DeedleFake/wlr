@@ -16,6 +16,10 @@ func CreateXWayland(display Display, compositor Compositor, lazy bool) XWayland 
 	return XWayland{p: p}
 }
 
+func (x XWayland) Valid() bool {
+	return x.p != nil
+}
+
 func (x XWayland) Destroy() {
 	C.wlr_xwayland_destroy(x.p)
 }
