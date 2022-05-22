@@ -168,6 +168,10 @@ type XDGPopup struct {
 	p *C.struct_wlr_xdg_popup
 }
 
+func (p XDGPopup) Parent() Surface {
+	return Surface{p: p.p.parent}
+}
+
 type XDGTopLevel struct {
 	p *C.struct_wlr_xdg_toplevel
 }
