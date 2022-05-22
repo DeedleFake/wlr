@@ -83,6 +83,11 @@ func (s XDGSurface) TopLevel() XDGTopLevel {
 	return XDGTopLevel{p: (*C.struct_wlr_xdg_toplevel)(p)}
 }
 
+func (s XDGSurface) Popup() XDGPopup {
+	p := *(*unsafe.Pointer)(unsafe.Pointer(&s.p.anon0[1]))
+	return XDGPopup{p: (*C.struct_wlr_xdg_popup)(p)}
+}
+
 func (s XDGSurface) TopLevelSetActivated(activated bool) {
 	C.wlr_xdg_toplevel_set_activated(s.p, C.bool(activated))
 }
