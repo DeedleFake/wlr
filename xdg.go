@@ -226,6 +226,14 @@ func (s XDGTopLevelState) Activated() bool {
 	return bool(s.v.activated)
 }
 
+func (s XDGTopLevelState) Width() uint32 {
+	return uint32(s.v.width)
+}
+
+func (s XDGTopLevelState) Height() uint32 {
+	return uint32(s.v.height)
+}
+
 func (s XDGTopLevelState) MinWidth() uint32 {
 	return uint32(s.v.min_width)
 }
