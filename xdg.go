@@ -226,6 +226,22 @@ func (s XDGTopLevelState) Activated() bool {
 	return bool(s.v.activated)
 }
 
+func (s XDGTopLevelState) MinWidth() uint32 {
+	return uint32(s.v.min_width)
+}
+
+func (s XDGTopLevelState) MinHeight() uint32 {
+	return uint32(s.v.min_height)
+}
+
+func (s XDGTopLevelState) MaxWidth() uint32 {
+	return uint32(s.v.max_width)
+}
+
+func (s XDGTopLevelState) MaxHeight() uint32 {
+	return uint32(s.v.max_height)
+}
+
 type XDGOutputManagerV1 struct {
 	p *C.struct_wlr_xdg_output_manager_v1
 }
