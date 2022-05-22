@@ -84,7 +84,7 @@ func (s XDGSurface) TopLevel() XDGTopLevel {
 }
 
 func (s XDGSurface) Popup() XDGPopup {
-	p := *(*unsafe.Pointer)(unsafe.Pointer(&s.p.anon0[1]))
+	p := *(*unsafe.Pointer)(unsafe.Pointer(&s.p.anon0[0]))
 	return XDGPopup{p: (*C.struct_wlr_xdg_popup)(p)}
 }
 
