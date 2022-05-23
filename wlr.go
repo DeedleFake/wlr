@@ -161,7 +161,7 @@ func boxFromC(box *C.struct_wlr_box) image.Rectangle {
 		int(box.x),
 		int(box.y),
 		int(box.x+box.width),
-		int(box.y+box.width),
+		int(box.y+box.height),
 	)
 }
 
