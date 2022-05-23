@@ -108,6 +108,14 @@ func (s Surface) XWaylandSurface() XWaylandSurface {
 	return XWaylandSurface{p: p}
 }
 
+func (s Surface) SX() int {
+	return int(s.p.sx)
+}
+
+func (s Surface) SY() int {
+	return int(s.p.sy)
+}
+
 type SurfaceState struct {
 	s C.struct_wlr_surface_state
 }
