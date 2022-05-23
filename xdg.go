@@ -78,6 +78,10 @@ func (s XDGSurface) Role() XDGSurfaceRole {
 	return XDGSurfaceRole(s.p.role)
 }
 
+func (s XDGSurface) Current() XDGSurfaceState {
+	return XDGSurfaceState{v: s.p.current}
+}
+
 func (s XDGSurface) TopLevel() XDGTopLevel {
 	p := *(*unsafe.Pointer)(unsafe.Pointer(&s.p.anon0[0]))
 	return XDGTopLevel{p: (*C.struct_wlr_xdg_toplevel)(p)}
@@ -272,4 +276,12 @@ func (m XDGOutputManagerV1) OnDestroy(cb func(XDGOutputManagerV1)) Listener {
 	return newListener(&m.p.events.destroy, func(lis Listener, data unsafe.Pointer) {
 		cb(m)
 	})
+}
+
+type XDGSurfaceState struct {
+	v C.struct_wlr_xdg_surface_state
+}
+
+func (s XDGSurfaceState) Geometry() image.Rectangle {
+	return boxFromC(&s.v.geometry)
 }
