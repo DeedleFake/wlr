@@ -10,6 +10,27 @@ void _wlr_surface_for_each_cb(struct wlr_surface *surface, int sx, int sy, void 
 static inline void _wlr_xdg_surface_for_each_surface(struct wlr_xdg_surface *surface, void *user_data) {
 	wlr_xdg_surface_for_each_surface(surface, _wlr_surface_for_each_cb, user_data);
 }
+
+struct _wlr_xdg_surface_has_surface_data {
+	struct wlr_surface *sub;
+	int found;
+};
+
+static void _wlr_xdg_surface_has_surface_cb(struct wlr_surface *surface, int sx, int sy, void *d) {
+	struct _wlr_xdg_surface_has_surface_data *data = (struct _wlr_xdg_surface_has_surface_data *)d;
+	if (surface == data->sub) {
+		data->found = 1;
+	}
+}
+
+static inline int _wlr_xdg_surface_has_surface(struct wlr_xdg_surface *surface, struct wlr_surface *sub) {
+	struct _wlr_xdg_surface_has_surface_data data = (struct _wlr_xdg_surface_has_surface_data){
+		.sub = sub,
+		.found = 0,
+	};
+	wlr_xdg_surface_for_each_surface(surface, _wlr_xdg_surface_has_surface_cb, &data);
+	return data.found;
+}
 */
 import "C"
 
@@ -72,6 +93,10 @@ func (s XDGSurface) ForEachSurface(cb func(Surface, int, int)) {
 	defer handle.Delete()
 
 	C._wlr_xdg_surface_for_each_surface(s.p, unsafe.Pointer(&handle))
+}
+
+func (s XDGSurface) HasSurface(sub Surface) bool {
+	return C._wlr_xdg_surface_has_surface(s.p, sub.p) != 0
 }
 
 func (s XDGSurface) Role() XDGSurfaceRole {

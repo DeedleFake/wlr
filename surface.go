@@ -11,6 +11,27 @@ static inline void _wlr_surface_for_each_surface(struct wlr_surface *surface, vo
 	wlr_surface_for_each_surface(surface, _wlr_surface_for_each_cb, user_data);
 }
 
+struct _wlr_surface_has_surface_data {
+	struct wlr_surface *sub;
+	int found;
+};
+
+static void _wlr_surface_has_surface_cb(struct wlr_surface *surface, int sx, int sy, void *d) {
+	struct _wlr_surface_has_surface_data *data = (struct _wlr_surface_has_surface_data *)d;
+	if (surface == data->sub) {
+		data->found = 1;
+	}
+}
+
+static inline int _wlr_surface_has_surface(struct wlr_surface *surface, struct wlr_surface *sub) {
+	struct _wlr_surface_has_surface_data data = (struct _wlr_surface_has_surface_data){
+		.sub = sub,
+		.found = 0,
+	};
+	wlr_surface_for_each_surface(surface, _wlr_surface_has_surface_cb, &data);
+	return data.found;
+}
+
 // _new_timespec exists to avoid possible problems from differing type
 // names on some systems. C is less picky than Go, so it shouldn't be
 // a problem if it's done here.
@@ -81,6 +102,13 @@ func (s Surface) ForEachSurface(cb func(Surface, int, int)) {
 	defer handle.Delete()
 
 	C._wlr_surface_for_each_surface(s.p, unsafe.Pointer(&handle))
+}
+
+// HasSurface is a convenience function that searches for sub in s. It
+// does the search entirely in C, so it may be more effecient than
+// manually iterating.
+func (s Surface) HasSurface(sub Surface) bool {
+	return C._wlr_surface_has_surface(s.p, sub.p) != 0
 }
 
 //export _wlr_surface_for_each_cb
