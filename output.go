@@ -105,15 +105,12 @@ func (o Output) Commit() {
 }
 
 func (o Output) Modes() (modes []OutputMode) {
-	var mode *C.struct_wlr_output_mode
-	for {
-		mode = (*C.struct_wlr_output_mode)(unsafe.Add(unsafe.Pointer(o.p.modes.next), -int(unsafe.Offsetof(mode.link))))
-		if &mode.link == &o.p.modes {
-			return modes
-		}
-
+	offset := int(unsafe.Offsetof(C.struct_wlr_output_mode{}.link))
+	listForEach(&o.p.modes, offset, func(mode *C.struct_wlr_output_mode) bool {
 		modes = append(modes, OutputMode{p: mode})
-	}
+		return true
+	})
+	return modes
 }
 
 func (o Output) SetMode(mode OutputMode) {

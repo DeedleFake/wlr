@@ -196,3 +196,22 @@ func (c Client) GetCredentials() (pid, uid, gid int) {
 	C.wl_client_get_credentials(c.p, &cpid, &cuid, &cgid)
 	return int(cpid), int(cuid), int(cgid)
 }
+
+func container[T any](list *C.struct_wl_list, offset int) *T {
+	return (*T)(unsafe.Add(unsafe.Pointer(list), -offset))
+}
+
+func listForEach[T any](head *C.struct_wl_list, offset int, do func(*T) bool) {
+	pos := head.next
+	for {
+		if head == pos {
+			return
+		}
+
+		if !do(container[T](pos, offset)) {
+			return
+		}
+
+		pos = pos.next
+	}
+}
