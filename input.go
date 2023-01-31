@@ -8,7 +8,6 @@ package wlr
 import "C"
 
 import (
-	"fmt"
 	"time"
 	"unsafe"
 
@@ -37,6 +36,10 @@ const (
 
 type Keyboard struct {
 	p *C.struct_wlr_keyboard
+}
+
+func (k Keyboard) Base() InputDevice {
+	return InputDevice{p: &k.p.base}
 }
 
 func (k Keyboard) SetKeymap(keymap xkb.Keymap) {
@@ -139,20 +142,14 @@ func (d InputDevice) Vendor() int           { return int(d.p.vendor) }
 func (d InputDevice) Product() int          { return int(d.p.product) }
 func (d InputDevice) Name() string          { return C.GoString(d.p.name) }
 
-func validateInputDeviceType(d InputDevice, fn string, req InputDeviceType) {
-	if typ := d.Type(); typ != req {
-		if int(typ) >= len(inputDeviceNames) {
-			panic(fmt.Sprintf("%s called on input device of type %d", fn, typ))
-		} else {
-			panic(fmt.Sprintf("%s called on input device of type %s", fn, inputDeviceNames[typ]))
-		}
-	}
+func (d InputDevice) Keyboard() Keyboard {
+	k := C.wlr_keyboard_from_input_device(d.p)
+	return Keyboard{p: k}
 }
 
-func (d InputDevice) Keyboard() Keyboard {
-	validateInputDeviceType(d, "Keyboard", InputDeviceTypeKeyboard)
-	p := (*C.struct_wlr_keyboard)(d.p.data)
-	return Keyboard{p: p}
+func (d InputDevice) Pointer() Pointer {
+	p := C.wlr_pointer_from_input_device(d.p)
+	return Pointer{p: p}
 }
 
 type KeyboardModifiers struct {
