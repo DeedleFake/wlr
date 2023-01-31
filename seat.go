@@ -69,7 +69,7 @@ func (s Seat) SetCapabilities(caps SeatCapability) {
 	C.wlr_seat_set_capabilities(s.p, C.uint32_t(caps))
 }
 
-func (s Seat) SetKeyboard(dev InputDevice) {
+func (s Seat) SetKeyboard(dev Keyboard) {
 	C.wlr_seat_set_keyboard(s.p, dev.p)
 }
 

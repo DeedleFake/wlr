@@ -78,7 +78,7 @@ func (k Keyboard) OnModifiers(cb func(keyboard Keyboard)) Listener {
 
 func (k Keyboard) OnKey(cb func(keyboard Keyboard, time time.Time, keyCode uint32, updateState bool, state KeyState)) Listener {
 	return newListener(&k.p.events.key, func(lis Listener, data unsafe.Pointer) {
-		event := (*C.struct_wlr_event_keyboard_key)(data)
+		event := (*C.struct_wlr_keyboard_key_event)(data)
 		cb(k, time.UnixMilli(int64(event.time_msec)), uint32(event.keycode), bool(event.update_state), KeyState(event.state))
 	})
 }
@@ -138,9 +138,6 @@ func (d InputDevice) Type() InputDeviceType { return InputDeviceType(d.p._type) 
 func (d InputDevice) Vendor() int           { return int(d.p.vendor) }
 func (d InputDevice) Product() int          { return int(d.p.product) }
 func (d InputDevice) Name() string          { return C.GoString(d.p.name) }
-func (d InputDevice) Width() float64        { return float64(d.p.width_mm) }
-func (d InputDevice) Height() float64       { return float64(d.p.height_mm) }
-func (d InputDevice) OutputName() string    { return C.GoString(d.p.output_name) }
 
 func validateInputDeviceType(d InputDevice, fn string, req InputDeviceType) {
 	if typ := d.Type(); typ != req {
@@ -154,8 +151,8 @@ func validateInputDeviceType(d InputDevice, fn string, req InputDeviceType) {
 
 func (d InputDevice) Keyboard() Keyboard {
 	validateInputDeviceType(d, "Keyboard", InputDeviceTypeKeyboard)
-	p := *(*unsafe.Pointer)(unsafe.Pointer(&d.p.anon0[0]))
-	return Keyboard{p: (*C.struct_wlr_keyboard)(p)}
+	p := (*C.struct_wlr_keyboard)(d.p.data)
+	return Keyboard{p: p}
 }
 
 type KeyboardModifiers struct {

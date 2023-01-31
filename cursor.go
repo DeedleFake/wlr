@@ -55,34 +55,34 @@ func (c Cursor) SetSurface(surface Surface, hotspotX int32, hotspotY int32) {
 	C.wlr_cursor_set_surface(c.p, surface.p, C.int32_t(hotspotX), C.int32_t(hotspotY))
 }
 
-func (c Cursor) OnMotion(cb func(dev InputDevice, time time.Time, dx, dy float64)) Listener {
+func (c Cursor) OnMotion(cb func(p Pointer, time time.Time, dx, dy float64)) Listener {
 	return newListener(&c.p.events.motion, func(lis Listener, data unsafe.Pointer) {
-		event := (*C.struct_wlr_event_pointer_motion)(data)
-		dev := InputDevice{p: event.device}
+		event := (*C.struct_wlr_pointer_motion_event)(data)
+		dev := Pointer{p: event.pointer}
 		cb(dev, time.UnixMilli(int64(event.time_msec)), float64(event.delta_x), float64(event.delta_y))
 	})
 }
 
-func (c Cursor) OnMotionAbsolute(cb func(dev InputDevice, time time.Time, x, y float64)) Listener {
+func (c Cursor) OnMotionAbsolute(cb func(p Pointer, time time.Time, x, y float64)) Listener {
 	return newListener(&c.p.events.motion_absolute, func(lis Listener, data unsafe.Pointer) {
-		event := (*C.struct_wlr_event_pointer_motion_absolute)(data)
-		dev := InputDevice{p: event.device}
+		event := (*C.struct_wlr_pointer_motion_absolute_event)(data)
+		dev := Pointer{p: event.pointer}
 		cb(dev, time.UnixMilli(int64(event.time_msec)), float64(event.x), float64(event.y))
 	})
 }
 
-func (c Cursor) OnButton(cb func(dev InputDevice, time time.Time, button CursorButton, state ButtonState)) Listener {
+func (c Cursor) OnButton(cb func(p Pointer, time time.Time, button CursorButton, state ButtonState)) Listener {
 	return newListener(&c.p.events.button, func(lis Listener, data unsafe.Pointer) {
-		event := (*C.struct_wlr_event_pointer_button)(data)
-		dev := InputDevice{p: event.device}
+		event := (*C.struct_wlr_pointer_button_event)(data)
+		dev := Pointer{p: event.pointer}
 		cb(dev, time.UnixMilli(int64(event.time_msec)), CursorButton(event.button), ButtonState(event.state))
 	})
 }
 
-func (c Cursor) OnAxis(cb func(dev InputDevice, time time.Time, source AxisSource, orientation AxisOrientation, delta float64, deltaDiscrete int32)) Listener {
+func (c Cursor) OnAxis(cb func(p Pointer, time time.Time, source AxisSource, orientation AxisOrientation, delta float64, deltaDiscrete int32)) Listener {
 	return newListener(&c.p.events.axis, func(lis Listener, data unsafe.Pointer) {
-		event := (*C.struct_wlr_event_pointer_axis)(data)
-		dev := InputDevice{p: event.device}
+		event := (*C.struct_wlr_pointer_axis_event)(data)
+		dev := Pointer{p: event.pointer}
 		cb(
 			dev,
 			time.UnixMilli(int64(event.time_msec)),
@@ -107,3 +107,15 @@ const (
 	BtnRight  CursorButton = C.BTN_RIGHT
 	BtnMiddle CursorButton = C.BTN_MIDDLE
 )
+
+type Pointer struct {
+	p *C.struct_wlr_pointer
+}
+
+func (p Pointer) Base() InputDevice {
+	return InputDevice{p: &p.p.base}
+}
+
+func (p Pointer) OutputName() string {
+	return C.GoString(p.p.output_name)
+}

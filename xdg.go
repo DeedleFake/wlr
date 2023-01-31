@@ -54,8 +54,8 @@ type XDGShell struct {
 	p *C.struct_wlr_xdg_shell
 }
 
-func CreateXDGShell(display Display) XDGShell {
-	p := C.wlr_xdg_shell_create(display.p)
+func CreateXDGShell(display Display, version uint32) XDGShell {
+	p := C.wlr_xdg_shell_create(display.p, C.uint32_t(version))
 	return XDGShell{p: p}
 }
 
@@ -117,27 +117,27 @@ func (s XDGSurface) Popup() XDGPopup {
 	return XDGPopup{p: (*C.struct_wlr_xdg_popup)(p)}
 }
 
-func (s XDGSurface) TopLevelSetActivated(activated bool) {
+func (s XDGTopLevel) SetActivated(activated bool) {
 	C.wlr_xdg_toplevel_set_activated(s.p, C.bool(activated))
 }
 
-func (s XDGSurface) TopLevelSetResizing(resizing bool) {
+func (s XDGTopLevel) SetResizing(resizing bool) {
 	C.wlr_xdg_toplevel_set_resizing(s.p, C.bool(resizing))
 }
 
-func (s XDGSurface) TopLevelSetSize(width uint32, height uint32) {
-	C.wlr_xdg_toplevel_set_size(s.p, C.uint32_t(width), C.uint32_t(height))
+func (s XDGTopLevel) SetSize(width int32, height int32) {
+	C.wlr_xdg_toplevel_set_size(s.p, C.int32_t(width), C.int32_t(height))
 }
 
-func (s XDGSurface) TopLevelSetTiled(edges Edges) {
+func (s XDGTopLevel) SetTiled(edges Edges) {
 	C.wlr_xdg_toplevel_set_tiled(s.p, C.uint32_t(edges))
 }
 
-func (s XDGSurface) TopLevelSetMaximized(maximized bool) {
+func (s XDGTopLevel) SetMaximized(maximized bool) {
 	C.wlr_xdg_toplevel_set_maximized(s.p, C.bool(maximized))
 }
 
-func (s XDGSurface) SendClose() {
+func (s XDGTopLevel) SendClose() {
 	C.wlr_xdg_toplevel_send_close(s.p)
 }
 
