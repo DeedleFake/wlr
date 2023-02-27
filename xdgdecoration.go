@@ -24,15 +24,16 @@ func CreateXDGDecorationManagerV1(display Display) XDGDecorationManagerV1 {
 	return XDGDecorationManagerV1{p: p}
 }
 
-func (m XDGDecorationManagerV1) OnNewToplevelDecoration(cb func(d XDGToplevelDecorationV1)) Listener {
+func (m XDGDecorationManagerV1) OnNewToplevelDecoration(cb func(XDGDecorationManagerV1, XDGToplevelDecorationV1)) Listener {
 	return newListener(&m.p.events.new_toplevel_decoration, func(lis Listener, data unsafe.Pointer) {
-		cb(XDGToplevelDecorationV1{p: (*C.struct_wlr_xdg_toplevel_decoration_v1)(data)})
+		d := XDGToplevelDecorationV1{p: (*C.struct_wlr_xdg_toplevel_decoration_v1)(data)}
+		cb(m, d)
 	})
 }
 
-func (m XDGDecorationManagerV1) OnDestroy(cb func()) Listener {
+func (m XDGDecorationManagerV1) OnDestroy(cb func(XDGDecorationManagerV1)) Listener {
 	return newListener(&m.p.events.destroy, func(lis Listener, data unsafe.Pointer) {
-		cb()
+		cb(m)
 	})
 }
 
@@ -52,15 +53,15 @@ func (d XDGToplevelDecorationV1) SetMode(mode XDGToplevelDecorationV1Mode) {
 	C.wlr_xdg_toplevel_decoration_v1_set_mode(d.p, C.enum_wlr_xdg_toplevel_decoration_v1_mode(mode))
 }
 
-func (d XDGToplevelDecorationV1) OnRequestMode(cb func()) Listener {
+func (d XDGToplevelDecorationV1) OnRequestMode(cb func(XDGToplevelDecorationV1)) Listener {
 	return newListener(&d.p.events.request_mode, func(lis Listener, data unsafe.Pointer) {
-		cb()
+		cb(d)
 	})
 }
 
-func (d XDGToplevelDecorationV1) OnDestroy(cb func()) Listener {
+func (d XDGToplevelDecorationV1) OnDestroy(cb func(XDGToplevelDecorationV1)) Listener {
 	return newListener(&d.p.events.destroy, func(lis Listener, data unsafe.Pointer) {
-		cb()
+		cb(d)
 	})
 }
 
