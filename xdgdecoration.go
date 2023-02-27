@@ -48,6 +48,12 @@ func (d XDGToplevelDecorationV1) SetMode(mode XDGToplevelDecorationV1Mode) {
 	C.wlr_xdg_toplevel_decoration_v1_set_mode(d.p, C.enum_wlr_xdg_toplevel_decoration_v1_mode(mode))
 }
 
+func (d XDGToplevelDecorationV1) OnRequestMode(cb func()) Listener {
+	return newListener(&d.p.events.request_mode, func(lis Listener, data unsafe.Pointer) {
+		cb()
+	})
+}
+
 func (d XDGToplevelDecorationV1) OnDestroy(cb func()) Listener {
 	return newListener(&d.p.events.destroy, func(lis Listener, data unsafe.Pointer) {
 		cb()
