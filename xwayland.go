@@ -7,6 +7,14 @@ import "C"
 
 import "unsafe"
 
+type XWaylandSurfaceDecorations uint32
+
+const (
+	XWaylandSurfaceDecorationsAll      XWaylandSurfaceDecorations = C.WLR_XWAYLAND_SURFACE_DECORATIONS_ALL
+	XWaylandSurfaceDecorationsNoBorder XWaylandSurfaceDecorations = C.WLR_XWAYLAND_SURFACE_DECORATIONS_NO_BORDER
+	XWaylandSurfaceDecorationsNoTitle  XWaylandSurfaceDecorations = C.WLR_XWAYLAND_SURFACE_DECORATIONS_NO_TITLE
+)
+
 type XWayland struct {
 	p *C.struct_wlr_xwayland
 }
@@ -60,6 +68,10 @@ func (s XWaylandSurface) Height() int {
 
 func (s XWaylandSurface) Title() string {
 	return C.GoString(s.p.title)
+}
+
+func (s XWaylandSurface) Decorations() XWaylandSurfaceDecorations {
+	return XWaylandSurfaceDecorations(s.p.decorations)
 }
 
 func (s XWaylandSurface) Surface() Surface {
@@ -139,6 +151,12 @@ func (s XWaylandSurface) OnRequestConfigure(cb func(surface XWaylandSurface, x i
 func (s XWaylandSurface) OnSetTitle(cb func(XWaylandSurface, string)) Listener {
 	return newListener(&s.p.events.set_title, func(lis Listener, data unsafe.Pointer) {
 		cb(s, C.GoString((*C.char)(data)))
+	})
+}
+
+func (s XWaylandSurface) OnSetDecorations(cb func(XWaylandSurface)) Listener {
+	return newListener(&s.p.events.set_decorations, func(lis Listener, data unsafe.Pointer) {
+		cb(s)
 	})
 }
 
