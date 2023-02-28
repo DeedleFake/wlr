@@ -44,7 +44,7 @@ type XDGSurfaceRole uint32
 
 const (
 	XDGSurfaceRoleNone     XDGSurfaceRole = C.WLR_XDG_SURFACE_ROLE_NONE
-	XDGSurfaceRoleTopLevel XDGSurfaceRole = C.WLR_XDG_SURFACE_ROLE_TOPLEVEL
+	XDGSurfaceRoleToplevel XDGSurfaceRole = C.WLR_XDG_SURFACE_ROLE_TOPLEVEL
 	XDGSurfaceRolePopup    XDGSurfaceRole = C.WLR_XDG_SURFACE_ROLE_POPUP
 )
 
@@ -107,9 +107,9 @@ func (s XDGSurface) Current() XDGSurfaceState {
 	return XDGSurfaceState{v: s.p.current}
 }
 
-func (s XDGSurface) TopLevel() XDGTopLevel {
+func (s XDGSurface) Toplevel() XDGToplevel {
 	p := *(*unsafe.Pointer)(unsafe.Pointer(&s.p.anon0[0]))
-	return XDGTopLevel{p: (*C.struct_wlr_xdg_toplevel)(p)}
+	return XDGToplevel{p: (*C.struct_wlr_xdg_toplevel)(p)}
 }
 
 func (s XDGSurface) Popup() XDGPopup {
@@ -117,27 +117,27 @@ func (s XDGSurface) Popup() XDGPopup {
 	return XDGPopup{p: (*C.struct_wlr_xdg_popup)(p)}
 }
 
-func (s XDGTopLevel) SetActivated(activated bool) {
+func (s XDGToplevel) SetActivated(activated bool) {
 	C.wlr_xdg_toplevel_set_activated(s.p, C.bool(activated))
 }
 
-func (s XDGTopLevel) SetResizing(resizing bool) {
+func (s XDGToplevel) SetResizing(resizing bool) {
 	C.wlr_xdg_toplevel_set_resizing(s.p, C.bool(resizing))
 }
 
-func (s XDGTopLevel) SetSize(width int32, height int32) {
+func (s XDGToplevel) SetSize(width int32, height int32) {
 	C.wlr_xdg_toplevel_set_size(s.p, C.int32_t(width), C.int32_t(height))
 }
 
-func (s XDGTopLevel) SetTiled(edges Edges) {
+func (s XDGToplevel) SetTiled(edges Edges) {
 	C.wlr_xdg_toplevel_set_tiled(s.p, C.uint32_t(edges))
 }
 
-func (s XDGTopLevel) SetMaximized(maximized bool) {
+func (s XDGToplevel) SetMaximized(maximized bool) {
 	C.wlr_xdg_toplevel_set_maximized(s.p, C.bool(maximized))
 }
 
-func (s XDGTopLevel) SendClose() {
+func (s XDGToplevel) SendClose() {
 	C.wlr_xdg_toplevel_send_close(s.p)
 }
 
@@ -206,11 +206,11 @@ func (p XDGPopup) Parent() Surface {
 	return Surface{p: p.p.parent}
 }
 
-type XDGTopLevel struct {
+type XDGToplevel struct {
 	p *C.struct_wlr_xdg_toplevel
 }
 
-func (t XDGTopLevel) OnRequestMove(cb func(t XDGTopLevel, client SeatClient, serial uint32)) Listener {
+func (t XDGToplevel) OnRequestMove(cb func(t XDGToplevel, client SeatClient, serial uint32)) Listener {
 	return newListener(&t.p.events.request_move, func(lis Listener, data unsafe.Pointer) {
 		event := (*C.struct_wlr_xdg_toplevel_move_event)(data)
 		client := SeatClient{p: event.seat}
@@ -218,7 +218,7 @@ func (t XDGTopLevel) OnRequestMove(cb func(t XDGTopLevel, client SeatClient, ser
 	})
 }
 
-func (t XDGTopLevel) OnRequestResize(cb func(t XDGTopLevel, client SeatClient, serial uint32, edges Edges)) Listener {
+func (t XDGToplevel) OnRequestResize(cb func(t XDGToplevel, client SeatClient, serial uint32, edges Edges)) Listener {
 	return newListener(&t.p.events.request_resize, func(lis Listener, data unsafe.Pointer) {
 		event := (*C.struct_wlr_xdg_toplevel_resize_event)(data)
 		client := SeatClient{p: event.seat}
@@ -226,65 +226,65 @@ func (t XDGTopLevel) OnRequestResize(cb func(t XDGTopLevel, client SeatClient, s
 	})
 }
 
-func (t XDGTopLevel) OnRequestMinimize(cb func(XDGTopLevel)) Listener {
+func (t XDGToplevel) OnRequestMinimize(cb func(XDGToplevel)) Listener {
 	return newListener(&t.p.events.request_minimize, func(lis Listener, data unsafe.Pointer) {
 		cb(t)
 	})
 }
 
-func (t XDGTopLevel) OnRequestMaximize(cb func(XDGTopLevel)) Listener {
+func (t XDGToplevel) OnRequestMaximize(cb func(XDGToplevel)) Listener {
 	return newListener(&t.p.events.request_maximize, func(lis Listener, data unsafe.Pointer) {
 		cb(t)
 	})
 }
 
-func (t XDGTopLevel) OnSetTitle(cb func(XDGTopLevel, string)) Listener {
+func (t XDGToplevel) OnSetTitle(cb func(XDGToplevel, string)) Listener {
 	return newListener(&t.p.events.set_title, func(lis Listener, data unsafe.Pointer) {
 		cb(t, C.GoString((*C.char)(data)))
 	})
 }
 
-func (s XDGTopLevel) Valid() bool {
+func (s XDGToplevel) Valid() bool {
 	return s.p != nil
 }
 
-func (t XDGTopLevel) Title() string {
+func (t XDGToplevel) Title() string {
 	return C.GoString(t.p.title)
 }
 
-func (t XDGTopLevel) Current() XDGTopLevelState {
-	return XDGTopLevelState{v: t.p.current}
+func (t XDGToplevel) Current() XDGToplevelState {
+	return XDGToplevelState{v: t.p.current}
 }
 
-type XDGTopLevelState struct {
+type XDGToplevelState struct {
 	v C.struct_wlr_xdg_toplevel_state
 }
 
-func (s XDGTopLevelState) Activated() bool {
+func (s XDGToplevelState) Activated() bool {
 	return bool(s.v.activated)
 }
 
-func (s XDGTopLevelState) Width() uint32 {
+func (s XDGToplevelState) Width() uint32 {
 	return uint32(s.v.width)
 }
 
-func (s XDGTopLevelState) Height() uint32 {
+func (s XDGToplevelState) Height() uint32 {
 	return uint32(s.v.height)
 }
 
-func (s XDGTopLevelState) MinWidth() uint32 {
+func (s XDGToplevelState) MinWidth() uint32 {
 	return uint32(s.v.min_width)
 }
 
-func (s XDGTopLevelState) MinHeight() uint32 {
+func (s XDGToplevelState) MinHeight() uint32 {
 	return uint32(s.v.min_height)
 }
 
-func (s XDGTopLevelState) MaxWidth() uint32 {
+func (s XDGToplevelState) MaxWidth() uint32 {
 	return uint32(s.v.max_width)
 }
 
-func (s XDGTopLevelState) MaxHeight() uint32 {
+func (s XDGToplevelState) MaxHeight() uint32 {
 	return uint32(s.v.max_height)
 }
 

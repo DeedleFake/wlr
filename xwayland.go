@@ -7,163 +7,163 @@ import "C"
 
 import "unsafe"
 
-type XWaylandSurfaceDecorations uint32
+type XwaylandSurfaceDecorations uint32
 
 const (
-	XWaylandSurfaceDecorationsAll      XWaylandSurfaceDecorations = C.WLR_XWAYLAND_SURFACE_DECORATIONS_ALL
-	XWaylandSurfaceDecorationsNoBorder XWaylandSurfaceDecorations = C.WLR_XWAYLAND_SURFACE_DECORATIONS_NO_BORDER
-	XWaylandSurfaceDecorationsNoTitle  XWaylandSurfaceDecorations = C.WLR_XWAYLAND_SURFACE_DECORATIONS_NO_TITLE
+	XwaylandSurfaceDecorationsAll      XwaylandSurfaceDecorations = C.WLR_XWAYLAND_SURFACE_DECORATIONS_ALL
+	XwaylandSurfaceDecorationsNoBorder XwaylandSurfaceDecorations = C.WLR_XWAYLAND_SURFACE_DECORATIONS_NO_BORDER
+	XwaylandSurfaceDecorationsNoTitle  XwaylandSurfaceDecorations = C.WLR_XWAYLAND_SURFACE_DECORATIONS_NO_TITLE
 )
 
-type XWayland struct {
+type Xwayland struct {
 	p *C.struct_wlr_xwayland
 }
 
-func CreateXWayland(display Display, compositor Compositor, lazy bool) XWayland {
+func CreateXwayland(display Display, compositor Compositor, lazy bool) Xwayland {
 	p := C.wlr_xwayland_create(display.p, compositor.p, C.bool(lazy))
-	return XWayland{p: p}
+	return Xwayland{p: p}
 }
 
-func (x XWayland) Valid() bool {
+func (x Xwayland) Valid() bool {
 	return x.p != nil
 }
 
-func (x XWayland) Destroy() {
+func (x Xwayland) Destroy() {
 	C.wlr_xwayland_destroy(x.p)
 }
 
-func (x XWayland) Server() XWaylandServer {
-	return XWaylandServer{p: x.p.server}
+func (x Xwayland) Server() XwaylandServer {
+	return XwaylandServer{p: x.p.server}
 }
 
-func (x XWayland) OnNewSurface(cb func(XWaylandSurface)) Listener {
+func (x Xwayland) OnNewSurface(cb func(XwaylandSurface)) Listener {
 	return newListener(&x.p.events.new_surface, func(lis Listener, data unsafe.Pointer) {
-		cb(XWaylandSurface{p: (*C.struct_wlr_xwayland_surface)(data)})
+		cb(XwaylandSurface{p: (*C.struct_wlr_xwayland_surface)(data)})
 	})
 }
 
-func (x XWayland) SetCursor(img XCursorImage) {
+func (x Xwayland) SetCursor(img XCursorImage) {
 	C.wlr_xwayland_set_cursor(x.p, img.p.buffer, img.p.width*4, img.p.width, img.p.height, C.int32_t(img.p.hotspot_x), C.int32_t(img.p.hotspot_y))
 }
 
-type XWaylandSurface struct {
+type XwaylandSurface struct {
 	p *C.struct_wlr_xwayland_surface
 }
 
-func (s XWaylandSurface) Valid() bool {
+func (s XwaylandSurface) Valid() bool {
 	return s.p != nil
 }
 
-func (s XWaylandSurface) Mapped() bool {
+func (s XwaylandSurface) Mapped() bool {
 	return bool(s.p.mapped)
 }
 
-func (s XWaylandSurface) Width() int {
+func (s XwaylandSurface) Width() int {
 	return int(s.p.width)
 }
 
-func (s XWaylandSurface) Height() int {
+func (s XwaylandSurface) Height() int {
 	return int(s.p.height)
 }
 
-func (s XWaylandSurface) Title() string {
+func (s XwaylandSurface) Title() string {
 	return C.GoString(s.p.title)
 }
 
-func (s XWaylandSurface) Decorations() XWaylandSurfaceDecorations {
-	return XWaylandSurfaceDecorations(s.p.decorations)
+func (s XwaylandSurface) Decorations() XwaylandSurfaceDecorations {
+	return XwaylandSurfaceDecorations(s.p.decorations)
 }
 
-func (s XWaylandSurface) Surface() Surface {
+func (s XwaylandSurface) Surface() Surface {
 	return Surface{p: s.p.surface}
 }
 
-func (s XWaylandSurface) Close() {
+func (s XwaylandSurface) Close() {
 	C.wlr_xwayland_surface_close(s.p)
 }
 
-func (s XWaylandSurface) Activate(a bool) {
+func (s XwaylandSurface) Activate(a bool) {
 	C.wlr_xwayland_surface_activate(s.p, C.bool(a))
 }
 
-func (s XWaylandSurface) SetMinimized(minimized bool) {
+func (s XwaylandSurface) SetMinimized(minimized bool) {
 	C.wlr_xwayland_surface_set_minimized(s.p, C.bool(minimized))
 }
 
-func (s XWaylandSurface) SetMaximized(maximized bool) {
+func (s XwaylandSurface) SetMaximized(maximized bool) {
 	C.wlr_xwayland_surface_set_maximized(s.p, C.bool(maximized))
 }
 
-func (s XWaylandSurface) Configure(x int16, y int16, width uint16, height uint16) {
+func (s XwaylandSurface) Configure(x int16, y int16, width uint16, height uint16) {
 	C.wlr_xwayland_surface_configure(s.p, C.int16_t(x), C.int16_t(y), C.uint16_t(width), C.uint16_t(height))
 }
 
-func (s XWaylandSurface) OnMap(cb func(XWaylandSurface)) Listener {
+func (s XwaylandSurface) OnMap(cb func(XwaylandSurface)) Listener {
 	return newListener(&s.p.events._map, func(lis Listener, data unsafe.Pointer) {
 		cb(s)
 	})
 }
 
-func (s XWaylandSurface) OnUnmap(cb func(XWaylandSurface)) Listener {
+func (s XwaylandSurface) OnUnmap(cb func(XwaylandSurface)) Listener {
 	return newListener(&s.p.events.unmap, func(lis Listener, data unsafe.Pointer) {
 		cb(s)
 	})
 }
 
-func (s XWaylandSurface) OnDestroy(cb func(XWaylandSurface)) Listener {
+func (s XwaylandSurface) OnDestroy(cb func(XwaylandSurface)) Listener {
 	return newListener(&s.p.events.destroy, func(lis Listener, data unsafe.Pointer) {
 		cb(s)
 	})
 }
 
-func (s XWaylandSurface) OnRequestMove(cb func(surface XWaylandSurface)) Listener {
+func (s XwaylandSurface) OnRequestMove(cb func(surface XwaylandSurface)) Listener {
 	return newListener(&s.p.events.request_move, func(lis Listener, data unsafe.Pointer) {
 		cb(s)
 	})
 }
 
-func (s XWaylandSurface) OnRequestResize(cb func(surface XWaylandSurface, edges Edges)) Listener {
+func (s XwaylandSurface) OnRequestResize(cb func(surface XwaylandSurface, edges Edges)) Listener {
 	return newListener(&s.p.events.request_resize, func(lis Listener, data unsafe.Pointer) {
 		event := (*C.struct_wlr_xwayland_resize_event)(data)
 		cb(s, Edges(event.edges))
 	})
 }
 
-func (s XWaylandSurface) OnRequestMinimize(cb func(surface XWaylandSurface)) Listener {
+func (s XwaylandSurface) OnRequestMinimize(cb func(surface XwaylandSurface)) Listener {
 	return newListener(&s.p.events.request_minimize, func(lis Listener, data unsafe.Pointer) {
 		cb(s)
 	})
 }
 
-func (s XWaylandSurface) OnRequestMaximize(cb func(surface XWaylandSurface)) Listener {
+func (s XwaylandSurface) OnRequestMaximize(cb func(surface XwaylandSurface)) Listener {
 	return newListener(&s.p.events.request_maximize, func(lis Listener, data unsafe.Pointer) {
 		cb(s)
 	})
 }
 
-func (s XWaylandSurface) OnRequestConfigure(cb func(surface XWaylandSurface, x int16, y int16, width uint16, height uint16)) Listener {
+func (s XwaylandSurface) OnRequestConfigure(cb func(surface XwaylandSurface, x int16, y int16, width uint16, height uint16)) Listener {
 	return newListener(&s.p.events.request_configure, func(lis Listener, data unsafe.Pointer) {
 		event := (*C.struct_wlr_xwayland_surface_configure_event)(data)
 		cb(s, int16(event.x), int16(event.y), uint16(event.width), uint16(event.height))
 	})
 }
 
-func (s XWaylandSurface) OnSetTitle(cb func(XWaylandSurface, string)) Listener {
+func (s XwaylandSurface) OnSetTitle(cb func(XwaylandSurface, string)) Listener {
 	return newListener(&s.p.events.set_title, func(lis Listener, data unsafe.Pointer) {
 		cb(s, C.GoString((*C.char)(data)))
 	})
 }
 
-func (s XWaylandSurface) OnSetDecorations(cb func(XWaylandSurface)) Listener {
+func (s XwaylandSurface) OnSetDecorations(cb func(XwaylandSurface)) Listener {
 	return newListener(&s.p.events.set_decorations, func(lis Listener, data unsafe.Pointer) {
 		cb(s)
 	})
 }
 
-type XWaylandServer struct {
+type XwaylandServer struct {
 	p *C.struct_wlr_xwayland_server
 }
 
-func (s XWaylandServer) DisplayName() string {
+func (s XwaylandServer) DisplayName() string {
 	return C.GoString(&s.p.display_name[0])
 }

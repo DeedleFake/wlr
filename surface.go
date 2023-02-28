@@ -56,7 +56,7 @@ type SurfaceType uint32
 const (
 	SurfaceTypeNone SurfaceType = iota
 	SurfaceTypeXDG
-	SurfaceTypeXWayland
+	SurfaceTypeXwayland
 )
 
 type Surface struct {
@@ -77,7 +77,7 @@ func (s Surface) Type() SurfaceType {
 	if C.wlr_surface_is_xdg_surface(s.p) {
 		return SurfaceTypeXDG
 	} else if C.wlr_surface_is_xwayland_surface(s.p) {
-		return SurfaceTypeXWayland
+		return SurfaceTypeXwayland
 	}
 
 	return SurfaceTypeNone
@@ -132,9 +132,9 @@ func (s Surface) SendFrameDone(when time.Time) {
 	C.wlr_surface_send_frame_done(s.p, &ts)
 }
 
-func (s Surface) XWaylandSurface() XWaylandSurface {
+func (s Surface) XwaylandSurface() XwaylandSurface {
 	p := C.wlr_xwayland_surface_from_wlr_surface(s.p)
-	return XWaylandSurface{p: p}
+	return XwaylandSurface{p: p}
 }
 
 func (s Surface) SX() int {
