@@ -12,6 +12,8 @@ import (
 	"errors"
 	"image"
 	"unsafe"
+
+	"deedles.dev/xiter"
 )
 
 type Output struct {
@@ -56,7 +58,7 @@ func (o Output) OnFrame(cb func(Output)) Listener {
 
 func (o Output) RenderSoftwareCursors(damage image.Rectangle) {
 	var cd *C.pixman_region32_t
-	if damage != image.ZR {
+	if damage != (image.Rectangle{}) {
 		t := rectToC(damage)
 		cd = &t
 	}
@@ -104,13 +106,10 @@ func (o Output) Commit() {
 	C.wlr_output_commit(o.p)
 }
 
-func (o Output) Modes() (modes []OutputMode) {
+func (o Output) Modes() xiter.Seq[OutputMode] {
 	offset := int(unsafe.Offsetof(C.struct_wlr_output_mode{}.link))
-	listForEach(&o.p.modes, offset, func(mode *C.struct_wlr_output_mode) bool {
-		modes = append(modes, OutputMode{p: mode})
-		return true
-	})
-	return modes
+	return xiter.Map(listSeq[C.struct_wlr_output_mode](&o.p.modes, offset),
+		func(m *C.struct_wlr_output_mode) OutputMode { return OutputMode{p: m} })
 }
 
 func (o Output) SetMode(mode OutputMode) {
