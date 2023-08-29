@@ -5,7 +5,7 @@ go 1.21
 toolchain go1.21.0
 
 require (
-	deedles.dev/xiter v0.0.0-20230827184420-158164c9eb75
-	golang.org/x/exp v0.0.0-20230522175609-2e198f4a06a1
-	golang.org/x/image v0.7.0
+	deedles.dev/xiter v0.0.0-20230829050510-6134ab52fd52
+	golang.org/x/exp v0.0.0-20230817173708-d852ddb80c63
+	golang.org/x/image v0.11.0
 )
