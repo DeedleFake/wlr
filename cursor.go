@@ -1,6 +1,7 @@
 package wlr
 
 /*
+#include <stdlib.h>
 #include <linux/input-event-codes.h>
 
 #include <wayland-server-core.h>
@@ -53,6 +54,13 @@ func (c Cursor) WarpAbsolute(dev InputDevice, x float64, y float64) {
 
 func (c Cursor) SetSurface(surface Surface, hotspotX int32, hotspotY int32) {
 	C.wlr_cursor_set_surface(c.p, surface.p, C.int32_t(hotspotX), C.int32_t(hotspotY))
+}
+
+func (c Cursor) SetXCursor(m XCursorManager, name string) {
+	s := C.CString(name)
+	defer C.free(unsafe.Pointer(s))
+
+	C.wlr_cursor_set_xcursor(c.p, m.p, s)
 }
 
 func (c Cursor) OnMotion(cb func(p Pointer, time time.Time, dx, dy float64)) Listener {

@@ -12,8 +12,8 @@ type LinuxDMABufV1 struct {
 	p *C.struct_wlr_linux_dmabuf_v1
 }
 
-func CreateLinuxDMABufV1(display Display, renderer Renderer) LinuxDMABufV1 {
-	p := C.wlr_linux_dmabuf_v1_create(display.p, renderer.p)
+func CreateLinuxDMABufV1WithRenderer(display Display, version uint32, renderer Renderer) LinuxDMABufV1 {
+	p := C.wlr_linux_dmabuf_v1_create_with_renderer(display.p, C.uint32_t(version), renderer.p)
 	return LinuxDMABufV1{p: p}
 }
 

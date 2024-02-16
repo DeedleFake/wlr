@@ -11,8 +11,8 @@ type LayerShellV1 struct {
 	p *C.struct_wlr_layer_shell_v1
 }
 
-func CreateLayerShellV1(display Display) LayerShellV1 {
-	p := C.wlr_layer_shell_v1_create(display.p)
+func CreateLayerShellV1(display Display, version uint32) LayerShellV1 {
+	p := C.wlr_layer_shell_v1_create(display.p, C.uint32_t(version))
 	return LayerShellV1{p: p}
 }
 
