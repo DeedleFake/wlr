@@ -227,6 +227,10 @@ func (s XDGToplevel) Valid() bool {
 	return s.p != nil
 }
 
+func (t XDGToplevel) Base() XDGSurface {
+	return XDGSurface{p: t.p.base}
+}
+
 func (t XDGToplevel) Title() string {
 	return C.GoString(t.p.title)
 }
