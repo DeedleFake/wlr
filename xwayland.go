@@ -54,10 +54,6 @@ func (s XwaylandSurface) Valid() bool {
 	return s.p != nil
 }
 
-func (s XwaylandSurface) Mapped() bool {
-	return bool(s.p.mapped)
-}
-
 func (s XwaylandSurface) Width() int {
 	return int(s.p.width)
 }
@@ -96,18 +92,6 @@ func (s XwaylandSurface) SetMaximized(maximized bool) {
 
 func (s XwaylandSurface) Configure(x int16, y int16, width uint16, height uint16) {
 	C.wlr_xwayland_surface_configure(s.p, C.int16_t(x), C.int16_t(y), C.uint16_t(width), C.uint16_t(height))
-}
-
-func (s XwaylandSurface) OnMap(cb func(XwaylandSurface)) Listener {
-	return newListener(&s.p.events._map, func(lis Listener, data unsafe.Pointer) {
-		cb(s)
-	})
-}
-
-func (s XwaylandSurface) OnUnmap(cb func(XwaylandSurface)) Listener {
-	return newListener(&s.p.events.unmap, func(lis Listener, data unsafe.Pointer) {
-		cb(s)
-	})
 }
 
 func (s XwaylandSurface) OnDestroy(cb func(XwaylandSurface)) Listener {

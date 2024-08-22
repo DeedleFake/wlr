@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"go/format"
 	"io"
+	"log/slog"
 	"os"
 	"strings"
 	"text/template"
@@ -20,15 +21,16 @@ func gen(w io.Writer) error {
 
 	s := bufio.NewScanner(file)
 	for s.Scan() {
-		const prefix = "XKB_KEY_"
-
 		parts := strings.Fields(s.Text())
-		if len(parts) < 2 {
+		if len(parts) < 3 {
+			continue
+		}
+		if parts[0] != "#define" {
 			continue
 		}
 
-		name := strings.TrimPrefix(parts[1], prefix)
-		if name == parts[1] {
+		name, ok := strings.CutPrefix(parts[1], "XKB_KEY_")
+		if !ok {
 			continue
 		}
 
@@ -75,26 +77,27 @@ const (
 	var buf bytes.Buffer
 	err := tmpl.Execute(&buf, nil)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+		slog.Error("execute template", "err", err)
 		os.Exit(1)
 	}
 
-	formatted, err := format.Source(buf.Bytes())
+	rawoutput := buf.Bytes()
+	formatted, err := format.Source(rawoutput)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error: format: %v\n", err)
-		os.Exit(1)
+		slog.Error("format output", "err", err)
+		formatted = rawoutput
 	}
 
 	file, err := os.Create(os.Args[1])
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error: create output file: %v\n", err)
+		slog.Error("create output file", "file", os.Args[1], "err", err)
 		os.Exit(1)
 	}
 	defer file.Close()
 
 	_, err = file.Write(formatted)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error: write output file: %v\n", err)
+		slog.Error("write output", "err", err)
 		os.Exit(1)
 	}
 }

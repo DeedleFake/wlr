@@ -75,11 +75,6 @@ type XDGSurface struct {
 	p *C.struct_wlr_xdg_surface
 }
 
-func XDGSurfaceFromWLRSurface(surface Surface) XDGSurface {
-	p := C.wlr_xdg_surface_from_wlr_surface(surface.p)
-	return XDGSurface{p: p}
-}
-
 func (s XDGSurface) Valid() bool {
 	return s.p != nil
 }
@@ -155,18 +150,6 @@ func (s XDGSurface) SurfaceAt(sx float64, sy float64) (surface Surface, subX flo
 	return Surface{p: p}, float64(csubX), float64(csubY), p != nil
 }
 
-func (s XDGSurface) OnMap(cb func(XDGSurface)) Listener {
-	return newListener(&s.p.events._map, func(lis Listener, data unsafe.Pointer) {
-		cb(s)
-	})
-}
-
-func (s XDGSurface) OnUnmap(cb func(XDGSurface)) Listener {
-	return newListener(&s.p.events.unmap, func(lis Listener, data unsafe.Pointer) {
-		cb(s)
-	})
-}
-
 func (s XDGSurface) OnDestroy(cb func(XDGSurface)) Listener {
 	return newListener(&s.p.events.destroy, func(lis Listener, data unsafe.Pointer) {
 		cb(s)
@@ -192,10 +175,6 @@ func (s XDGSurface) GetGeometry() image.Rectangle {
 	var cb C.struct_wlr_box
 	C.wlr_xdg_surface_get_geometry(s.p, &cb)
 	return boxFromC(&cb)
-}
-
-func (s XDGSurface) Mapped() bool {
-	return bool(s.p.mapped)
 }
 
 type XDGPopup struct {
@@ -246,6 +225,10 @@ func (t XDGToplevel) OnSetTitle(cb func(XDGToplevel, string)) Listener {
 
 func (s XDGToplevel) Valid() bool {
 	return s.p != nil
+}
+
+func (t XDGToplevel) Base() XDGSurface {
+	return XDGSurface{p: t.p.base}
 }
 
 func (t XDGToplevel) Title() string {

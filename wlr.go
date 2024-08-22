@@ -118,8 +118,8 @@ type Compositor struct {
 	p *C.struct_wlr_compositor
 }
 
-func CreateCompositor(display Display, renderer Renderer) Compositor {
-	p := C.wlr_compositor_create(display.p, renderer.p)
+func CreateCompositor(display Display, version uint32, renderer Renderer) Compositor {
+	p := C.wlr_compositor_create(display.p, C.uint32_t(version), renderer.p)
 	return Compositor{p: p}
 }
 

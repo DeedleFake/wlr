@@ -41,8 +41,8 @@ type XDGToplevelDecorationV1 struct {
 	p *C.struct_wlr_xdg_toplevel_decoration_v1
 }
 
-func (d XDGToplevelDecorationV1) Surface() XDGSurface {
-	return XDGSurface{p: d.p.surface}
+func (d XDGToplevelDecorationV1) Toplevel() XDGToplevel {
+	return XDGToplevel{p: d.p.toplevel}
 }
 
 func (d XDGToplevelDecorationV1) RequestedMode() XDGToplevelDecorationV1Mode {

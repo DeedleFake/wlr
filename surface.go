@@ -51,14 +51,6 @@ import (
 	"unsafe"
 )
 
-type SurfaceType uint32
-
-const (
-	SurfaceTypeNone SurfaceType = iota
-	SurfaceTypeXDG
-	SurfaceTypeXwayland
-)
-
 type Surface struct {
 	p *C.struct_wlr_surface
 }
@@ -67,20 +59,26 @@ func (s Surface) Valid() bool {
 	return s.p != nil
 }
 
+func (s Surface) OnMap(cb func(Surface)) Listener {
+	return newListener(&s.p.events._map, func(lis Listener, data unsafe.Pointer) {
+		cb(s)
+	})
+}
+
+func (s Surface) OnUnmap(cb func(Surface)) Listener {
+	return newListener(&s.p.events.unmap, func(lis Listener, data unsafe.Pointer) {
+		cb(s)
+	})
+}
+
 func (s Surface) OnDestroy(cb func(Surface)) Listener {
 	return newListener(&s.p.events.destroy, func(lis Listener, data unsafe.Pointer) {
 		cb(s)
 	})
 }
 
-func (s Surface) Type() SurfaceType {
-	if C.wlr_surface_is_xdg_surface(s.p) {
-		return SurfaceTypeXDG
-	} else if C.wlr_surface_is_xwayland_surface(s.p) {
-		return SurfaceTypeXwayland
-	}
-
-	return SurfaceTypeNone
+func (s Surface) Mapped() bool {
+	return bool(s.p.mapped)
 }
 
 func (s Surface) SurfaceAt(sx float64, sy float64) (surface Surface, subX, subY float64, ok bool) {
@@ -95,7 +93,7 @@ func (s Surface) GetTexture() Texture {
 }
 
 func (s Surface) Current() SurfaceState {
-	return SurfaceState{s: s.p.current}
+	return SurfaceState{v: s.p.current}
 }
 
 func (s Surface) ForEachSurface(cb func(Surface, int, int)) {
@@ -133,30 +131,35 @@ func (s Surface) SendFrameDone(when time.Time) {
 }
 
 func (s Surface) XwaylandSurface() XwaylandSurface {
-	p := C.wlr_xwayland_surface_from_wlr_surface(s.p)
+	p := C.wlr_xwayland_surface_try_from_wlr_surface(s.p)
 	return XwaylandSurface{p: p}
 }
 
-func (s Surface) SX() int {
-	return int(s.p.sx)
-}
-
-func (s Surface) SY() int {
-	return int(s.p.sy)
+func (s Surface) XDGSurface() XDGSurface {
+	p := C.wlr_xdg_surface_try_from_wlr_surface(s.p)
+	return XDGSurface{p: p}
 }
 
 type SurfaceState struct {
-	s C.struct_wlr_surface_state
+	v C.struct_wlr_surface_state
+}
+
+func (s SurfaceState) Dx() int32 {
+	return int32(s.v.dx)
+}
+
+func (s SurfaceState) Dy() int32 {
+	return int32(s.v.dy)
 }
 
 func (s SurfaceState) Width() int {
-	return int(s.s.width)
+	return int(s.v.width)
 }
 
 func (s SurfaceState) Height() int {
-	return int(s.s.height)
+	return int(s.v.height)
 }
 
 func (s SurfaceState) Transform() OutputTransform {
-	return OutputTransform(s.s.transform)
+	return OutputTransform(s.v.transform)
 }

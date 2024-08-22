@@ -18,7 +18,7 @@ type Backend struct {
 }
 
 func AutocreateBackend(display Display) Backend {
-	p := C.wlr_backend_autocreate(display.p)
+	p := C.wlr_backend_autocreate(display.p, nil)
 	return Backend{p: p}
 }
 

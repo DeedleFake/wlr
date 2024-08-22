@@ -48,13 +48,6 @@ func (m XCursorManager) Load(scale float64) {
 	C.wlr_xcursor_manager_load(m.p, C.float(scale))
 }
 
-func (m XCursorManager) SetCursorImage(name string, cursor Cursor) {
-	s := C.CString(name)
-	defer C.free(unsafe.Pointer(s))
-
-	C.wlr_xcursor_manager_set_cursor_image(m.p, s, cursor.p)
-}
-
 func (m XCursorManager) GetXCursor(name string, scale float32) XCursor {
 	s := C.CString(name)
 	defer C.free(unsafe.Pointer(s))
