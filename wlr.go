@@ -21,6 +21,7 @@ import "C"
 import (
 	"image"
 	"image/color"
+	"iter"
 	"time"
 	"unsafe"
 
@@ -139,7 +140,7 @@ func colorToC(c color.Color) [4]C.float {
 }
 
 func boxToC(r image.Rectangle) *C.struct_wlr_box {
-	if r == image.ZR {
+	if r == (image.Rectangle{}) {
 		return nil
 	}
 
@@ -154,7 +155,7 @@ func boxToC(r image.Rectangle) *C.struct_wlr_box {
 
 func boxFromC(box *C.struct_wlr_box) image.Rectangle {
 	if box == nil {
-		return image.ZR
+		return image.Rectangle{}
 	}
 
 	return image.Rect(
@@ -201,17 +202,25 @@ func container[T any](list *C.struct_wl_list, offset int) *T {
 	return (*T)(unsafe.Add(unsafe.Pointer(list), -offset))
 }
 
-func listForEach[T any](head *C.struct_wl_list, offset int, do func(*T) bool) {
-	pos := head.next
-	for {
-		if head == pos {
-			return
-		}
+func listSeq[T any](head *C.struct_wl_list, offset int) iter.Seq[*T] {
+	return func(yield func(*T) bool) {
+		pos := head.next
+		for {
+			if head == pos {
+				return
+			}
 
-		if !do(container[T](pos, offset)) {
-			return
-		}
+			if !yield(container[T](pos, offset)) {
+				return
+			}
 
-		pos = pos.next
+			pos = pos.next
+		}
 	}
+}
+
+// IterSurface wraps data yielded by surface iterators.
+type IterSurface struct {
+	Surface Surface
+	X, Y    int
 }

@@ -11,6 +11,7 @@ import "C"
 import (
 	"errors"
 	"image"
+	"iter"
 	"unsafe"
 )
 
@@ -56,7 +57,7 @@ func (o Output) OnFrame(cb func(Output)) Listener {
 
 func (o Output) RenderSoftwareCursors(damage image.Rectangle) {
 	var cd *C.pixman_region32_t
-	if damage != image.ZR {
+	if damage != (image.Rectangle{}) {
 		t := rectToC(damage)
 		cd = &t
 	}
@@ -104,13 +105,16 @@ func (o Output) Commit() {
 	C.wlr_output_commit(o.p)
 }
 
-func (o Output) Modes() (modes []OutputMode) {
+func (o Output) Modes() iter.Seq[OutputMode] {
 	offset := int(unsafe.Offsetof(C.struct_wlr_output_mode{}.link))
-	listForEach(&o.p.modes, offset, func(mode *C.struct_wlr_output_mode) bool {
-		modes = append(modes, OutputMode{p: mode})
-		return true
-	})
-	return modes
+	return func(yield func(OutputMode) bool) {
+		seq := listSeq[C.struct_wlr_output_mode](&o.p.modes, offset)
+		for mode := range seq {
+			if !yield(OutputMode{p: mode}) {
+				return
+			}
+		}
+	}
 }
 
 func (o Output) SetMode(mode OutputMode) {

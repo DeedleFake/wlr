@@ -8,7 +8,10 @@ package wlr
 */
 import "C"
 
-import "unsafe"
+import (
+	"iter"
+	"unsafe"
+)
 
 type XCursor struct {
 	p *C.struct_wlr_xcursor
@@ -58,12 +61,15 @@ func (c XCursor) Image(i int) XCursorImage {
 	return XCursorImage{p: slice[i]}
 }
 
-func (c XCursor) Images() []XCursorImage {
-	images := make([]XCursorImage, 0, c.ImageCount())
-	for i := 0; i < cap(images); i++ {
-		images = append(images, c.Image(i))
+func (c XCursor) Images() iter.Seq[XCursorImage] {
+	return func(yield func(XCursorImage) bool) {
+		count := c.ImageCount()
+		for i := 0; i < count; i++ {
+			if !yield(c.Image(i)) {
+				return
+			}
+		}
 	}
-	return images
 }
 
 func (c XCursor) ImageCount() int {
