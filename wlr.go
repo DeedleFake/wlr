@@ -218,3 +218,9 @@ func listSeq[T any](head *C.struct_wl_list, offset int) iter.Seq[*T] {
 		}
 	}
 }
+
+// IterSurface wraps data yielded by surface iterators.
+type IterSurface struct {
+	Surface Surface
+	X, Y    int
+}

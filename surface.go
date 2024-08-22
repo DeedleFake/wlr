@@ -46,6 +46,7 @@ static inline struct timespec _new_timespec(long sec, long nsec) {
 import "C"
 
 import (
+	"iter"
 	"runtime/cgo"
 	"time"
 	"unsafe"
@@ -101,6 +102,20 @@ func (s Surface) ForEachSurface(cb func(Surface, int, int)) {
 	defer handle.Delete()
 
 	C._wlr_surface_for_each_surface(s.p, unsafe.Pointer(&handle))
+}
+
+func (s Surface) Surfaces() iter.Seq[IterSurface] {
+	return func(yield func(IterSurface) bool) {
+		ok := true
+		s.ForEachSurface(func(s Surface, sx, sy int) {
+			if !ok {
+				// A tad hacky, but it should work.
+				return
+			}
+
+			ok = yield(IterSurface{s, sx, sy})
+		})
+	}
 }
 
 // HasSurface is a convenience function that searches for sub in s. It

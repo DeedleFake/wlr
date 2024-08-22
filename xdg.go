@@ -36,6 +36,7 @@ import "C"
 
 import (
 	"image"
+	"iter"
 	"runtime/cgo"
 	"unsafe"
 )
@@ -88,6 +89,19 @@ func (s XDGSurface) ForEachSurface(cb func(Surface, int, int)) {
 	defer handle.Delete()
 
 	C._wlr_xdg_surface_for_each_surface(s.p, unsafe.Pointer(&handle))
+}
+
+func (s XDGSurface) Surfaces() iter.Seq[IterSurface] {
+	return func(yield func(IterSurface) bool) {
+		ok := true
+		s.ForEachSurface(func(s Surface, sx, sy int) {
+			if !ok {
+				return
+			}
+
+			ok = yield(IterSurface{s, sx, sy})
+		})
+	}
 }
 
 func (s XDGSurface) HasSurface(sub Surface) bool {
