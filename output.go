@@ -11,9 +11,8 @@ import "C"
 import (
 	"errors"
 	"image"
+	"iter"
 	"unsafe"
-
-	"deedles.dev/xiter"
 )
 
 type Output struct {
@@ -106,10 +105,16 @@ func (o Output) Commit() {
 	C.wlr_output_commit(o.p)
 }
 
-func (o Output) Modes() xiter.Seq[OutputMode] {
+func (o Output) Modes() iter.Seq[OutputMode] {
 	offset := int(unsafe.Offsetof(C.struct_wlr_output_mode{}.link))
-	return xiter.Map(listSeq[C.struct_wlr_output_mode](&o.p.modes, offset),
-		func(m *C.struct_wlr_output_mode) OutputMode { return OutputMode{p: m} })
+	return func(yield func(OutputMode) bool) {
+		seq := listSeq[C.struct_wlr_output_mode](&o.p.modes, offset)
+		for mode := range seq {
+			if !yield(OutputMode{p: mode}) {
+				return
+			}
+		}
+	}
 }
 
 func (o Output) SetMode(mode OutputMode) {

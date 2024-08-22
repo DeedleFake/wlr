@@ -9,9 +9,8 @@ package wlr
 import "C"
 
 import (
+	"iter"
 	"unsafe"
-
-	"deedles.dev/xiter"
 )
 
 type XCursor struct {
@@ -58,19 +57,18 @@ func (m XCursorManager) GetXCursor(name string, scale float32) XCursor {
 
 func (c XCursor) Image(i int) XCursorImage {
 	n := c.ImageCount()
-	slice := (*[1<<30]*C.struct_wlr_xcursor_image)(unsafe.Pointer(c.p.images))[:n:n]
+	slice := (*[1 << 30]*C.struct_wlr_xcursor_image)(unsafe.Pointer(c.p.images))[:n:n]
 	return XCursorImage{p: slice[i]}
 }
 
-func (c XCursor) Images() xiter.Seq[XCursorImage] {
-	return func(yield func(XCursorImage) bool) bool {
+func (c XCursor) Images() iter.Seq[XCursorImage] {
+	return func(yield func(XCursorImage) bool) {
 		count := c.ImageCount()
 		for i := 0; i < count; i++ {
 			if !yield(c.Image(i)) {
-				return false
+				return
 			}
 		}
-		return false
 	}
 }
 

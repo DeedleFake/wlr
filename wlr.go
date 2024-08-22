@@ -21,10 +21,10 @@ import "C"
 import (
 	"image"
 	"image/color"
+	"iter"
 	"time"
 	"unsafe"
 
-	"deedles.dev/xiter"
 	"golang.org/x/exp/constraints"
 )
 
@@ -202,16 +202,16 @@ func container[T any](list *C.struct_wl_list, offset int) *T {
 	return (*T)(unsafe.Add(unsafe.Pointer(list), -offset))
 }
 
-func listSeq[T any](head *C.struct_wl_list, offset int) xiter.Seq[*T] {
-	return func(yield func(*T) bool) bool {
+func listSeq[T any](head *C.struct_wl_list, offset int) iter.Seq[*T] {
+	return func(yield func(*T) bool) {
 		pos := head.next
 		for {
 			if head == pos {
-				return false
+				return
 			}
 
 			if !yield(container[T](pos, offset)) {
-				return false
+				return
 			}
 
 			pos = pos.next
