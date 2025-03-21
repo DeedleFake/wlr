@@ -24,8 +24,6 @@ import (
 	"iter"
 	"time"
 	"unsafe"
-
-	"golang.org/x/exp/constraints"
 )
 
 type Edges uint32
@@ -46,9 +44,13 @@ func matrixFromC(cm *[9]C.float) *Matrix {
 	return &m
 }
 
-func copyMatrix[
-	Out, In constraints.Integer | constraints.Float,
-](out *[9]Out, in *[9]In) {
+type number interface {
+	~float32 | ~float64 |
+		~int | ~int8 | ~int16 | ~int32 | ~int64 |
+		~uint | ~uint8 | ~uint16 | ~uint32 | ~uint64 | ~uintptr
+}
+
+func copyMatrix[Out, In number](out *[9]Out, in *[9]In) {
 	for i := range out {
 		out[i] = Out(in[i])
 	}
