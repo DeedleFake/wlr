@@ -57,14 +57,14 @@ func (m XCursorManager) GetXCursor(name string, scale float32) XCursor {
 
 func (c XCursor) Image(i int) XCursorImage {
 	n := c.ImageCount()
-	slice := (*[1 << 30]*C.struct_wlr_xcursor_image)(unsafe.Pointer(c.p.images))[:n:n]
+	slice := unsafe.Slice(c.p.images, n)
 	return XCursorImage{p: slice[i]}
 }
 
 func (c XCursor) Images() iter.Seq[XCursorImage] {
 	return func(yield func(XCursorImage) bool) {
 		count := c.ImageCount()
-		for i := 0; i < count; i++ {
+		for i := range count {
 			if !yield(c.Image(i)) {
 				return
 			}
