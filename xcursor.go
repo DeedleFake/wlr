@@ -43,6 +43,10 @@ func (m XCursorManager) Destroy() {
 	C.wlr_xcursor_manager_destroy(m.p)
 }
 
+func (m XCursorManager) Valid() bool {
+	return m.p != nil
+}
+
 func (m XCursorManager) Load(scale float64) {
 	C.wlr_xcursor_manager_load(m.p, C.float(scale))
 }
@@ -55,7 +59,14 @@ func (m XCursorManager) GetXCursor(name string, scale float32) XCursor {
 	return XCursor{p: p}
 }
 
+func (c XCursor) Valid() bool {
+	return c.p != nil
+}
+
 func (c XCursor) Image(i int) XCursorImage {
+	if !c.Valid() {
+		return XCursorImage{}
+	}
 	n := c.ImageCount()
 	slice := unsafe.Slice(c.p.images, n)
 	return XCursorImage{p: slice[i]}
@@ -73,9 +84,16 @@ func (c XCursor) Images() iter.Seq[XCursorImage] {
 }
 
 func (c XCursor) ImageCount() int {
+	if !c.Valid() {
+		return 0
+	}
 	return int(c.p.image_count)
 }
 
 func (c XCursor) Name() string {
 	return C.GoString(c.p.name)
+}
+
+func (img XCursorImage) Valid() bool {
+	return img.p != nil
 }
