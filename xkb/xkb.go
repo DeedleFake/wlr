@@ -59,10 +59,10 @@ func (s State) Syms(keyCode KeyCode) []KeySym {
 	if n == 0 || syms == nil {
 		return nil
 	}
-	slice := (*[1 << 30]C.xkb_keysym_t)(unsafe.Pointer(syms))[:n:n]
+	slice := unsafe.Slice(syms, n)
 
 	res := make([]KeySym, n)
-	for i := 0; i < n; i++ {
+	for i := range n {
 		res[i] = KeySym(slice[i])
 	}
 
