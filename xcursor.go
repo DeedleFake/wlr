@@ -64,9 +64,6 @@ func (c XCursor) Valid() bool {
 }
 
 func (c XCursor) Image(i int) XCursorImage {
-	if !c.Valid() {
-		return XCursorImage{}
-	}
 	n := c.ImageCount()
 	slice := unsafe.Slice(c.p.images, n)
 	return XCursorImage{p: slice[i]}
@@ -84,9 +81,6 @@ func (c XCursor) Images() iter.Seq[XCursorImage] {
 }
 
 func (c XCursor) ImageCount() int {
-	if !c.Valid() {
-		return 0
-	}
 	return int(c.p.image_count)
 }
 
