@@ -1,10 +1,12 @@
 package wlr
 
 /*
+#include <stdlib.h>
 #include <wlr/backend/wayland.h>
 #include <wlr/backend/x11.h>
 #include <wlr/types/wlr_output.h>
 #include <wlr/types/wlr_output_layout.h>
+#include <wlr/util/transform.h>
 */
 import "C"
 
@@ -33,20 +35,8 @@ func (o Output) Scale() float32 {
 	return float32(o.p.scale)
 }
 
-func (o Output) SetScale(scale float32) {
-	C.wlr_output_set_scale(o.p, C.float(scale))
-}
-
 func (o Output) Transform() OutputTransform {
 	return OutputTransform(o.p.transform)
-}
-
-func (o Output) SetTransform(transform OutputTransform) {
-	C.wlr_output_set_transform(o.p, C.enum_wl_output_transform(transform))
-}
-
-func (o Output) TransformMatrix() *Matrix {
-	return matrixFromC(&o.p.transform_matrix)
 }
 
 func (o Output) OnFrame(cb func(Output)) Listener {
@@ -55,13 +45,20 @@ func (o Output) OnFrame(cb func(Output)) Listener {
 	})
 }
 
-func (o Output) RenderSoftwareCursors(damage image.Rectangle) {
+func (o Output) OnRequestState(cb func(Output, OutputState)) Listener {
+	return newListener(&o.p.events.request_state, func(lis Listener, data unsafe.Pointer) {
+		event := (*C.struct_wlr_output_event_request_state)(data)
+		cb(o, OutputState{p: event.state})
+	})
+}
+
+func (o Output) AddSoftwareCursorsToRenderPass(pass RenderPass, damage image.Rectangle) {
 	var cd *C.pixman_region32_t
 	if damage != (image.Rectangle{}) {
 		t := rectToC(damage)
 		cd = &t
 	}
-	C.wlr_output_render_software_cursors(o.p, cd)
+	C.wlr_output_add_software_cursors_to_render_pass(o.p, pass.p, cd)
 }
 
 func (o Output) TransformedResolution() (int, int) {
@@ -76,33 +73,36 @@ func (o Output) EffectiveResolution() (int, int) {
 	return int(width), int(height)
 }
 
-func (o Output) InitRender(a Allocator, r Renderer) {
-	C.wlr_output_init_render(o.p, a.p, r.p)
+func (o Output) InitRender(a Allocator, r Renderer) bool {
+	return bool(C.wlr_output_init_render(o.p, a.p, r.p))
 }
 
-func (o Output) AttachRender() (int, error) {
-	var bufferAge C.int
-	if !C.wlr_output_attach_render(o.p, &bufferAge) {
-		return 0, errors.New("can't make output context current")
+func (o Output) BeginRenderPass(state OutputState) (RenderPass, error) {
+	pass := C.wlr_output_begin_render_pass(o.p, state.p, nil)
+	if pass == nil {
+		return RenderPass{}, errors.New("can't begin render pass")
 	}
-
-	return int(bufferAge), nil
+	return RenderPass{p: pass}, nil
 }
 
-func (o Output) Rollback() {
-	C.wlr_output_rollback(o.p)
-}
-
-func (o Output) CreateGlobal() {
-	C.wlr_output_create_global(o.p)
+func (o Output) CreateGlobal(display Display) {
+	C.wlr_output_create_global(o.p, display.p)
 }
 
 func (o Output) DestroyGlobal() {
 	C.wlr_output_destroy_global(o.p)
 }
 
-func (o Output) Commit() {
-	C.wlr_output_commit(o.p)
+func (o Output) TestState(state OutputState) bool {
+	return bool(C.wlr_output_test_state(o.p, state.p))
+}
+
+func (o Output) CommitState(state OutputState) bool {
+	return bool(C.wlr_output_commit_state(o.p, state.p))
+}
+
+func (o Output) ScheduleFrame() {
+	C.wlr_output_schedule_frame(o.p)
 }
 
 func (o Output) Modes() iter.Seq[OutputMode] {
@@ -115,14 +115,6 @@ func (o Output) Modes() iter.Seq[OutputMode] {
 			}
 		}
 	}
-}
-
-func (o Output) SetMode(mode OutputMode) {
-	C.wlr_output_set_mode(o.p, mode.p)
-}
-
-func (o Output) Enable(enable bool) {
-	C.wlr_output_enable(o.p, C.bool(enable))
 }
 
 func (o Output) SetTitle(title string) error {
@@ -150,12 +142,55 @@ func (o Output) Height() int {
 	return int(o.p.height)
 }
 
+func (o Output) Enabled() bool {
+	return bool(o.p.enabled)
+}
+
+type OutputState struct {
+	p *C.struct_wlr_output_state
+}
+
+// NewOutputState allocates and initializes an output state on the Go heap.
+// Call Finish when done.
+func NewOutputState() OutputState {
+	state := OutputState{p: &C.struct_wlr_output_state{}}
+	C.wlr_output_state_init(state.p)
+	return state
+}
+
+func (s OutputState) Valid() bool {
+	return s.p != nil
+}
+
+func (s OutputState) Finish() {
+	if s.p == nil {
+		return
+	}
+	C.wlr_output_state_finish(s.p)
+}
+
+func (s OutputState) SetEnabled(enabled bool) {
+	C.wlr_output_state_set_enabled(s.p, C.bool(enabled))
+}
+
+func (s OutputState) SetMode(mode OutputMode) {
+	C.wlr_output_state_set_mode(s.p, mode.p)
+}
+
+func (s OutputState) SetScale(scale float32) {
+	C.wlr_output_state_set_scale(s.p, C.float(scale))
+}
+
+func (s OutputState) SetTransform(transform OutputTransform) {
+	C.wlr_output_state_set_transform(s.p, C.enum_wl_output_transform(transform))
+}
+
 type OutputLayout struct {
 	p *C.struct_wlr_output_layout
 }
 
-func CreateOutputLayout() OutputLayout {
-	p := C.wlr_output_layout_create()
+func CreateOutputLayout(display Display) OutputLayout {
+	p := C.wlr_output_layout_create(display.p)
 	return OutputLayout{p: p}
 }
 
@@ -163,12 +198,14 @@ func (l OutputLayout) Destroy() {
 	C.wlr_output_layout_destroy(l.p)
 }
 
-func (l OutputLayout) AddAuto(output Output) {
-	C.wlr_output_layout_add_auto(l.p, output.p)
+func (l OutputLayout) AddAuto(output Output) OutputLayoutOutput {
+	p := C.wlr_output_layout_add_auto(l.p, output.p)
+	return OutputLayoutOutput{p: p}
 }
 
-func (l OutputLayout) Add(output Output, lx, ly int) {
-	C.wlr_output_layout_add(l.p, output.p, C.int(lx), C.int(ly))
+func (l OutputLayout) Add(output Output, lx, ly int) OutputLayoutOutput {
+	p := C.wlr_output_layout_add(l.p, output.p, C.int(lx), C.int(ly))
+	return OutputLayoutOutput{p: p}
 }
 
 func (l OutputLayout) OutputCoords(output Output) (x float64, y float64) {
@@ -189,6 +226,10 @@ func (l OutputLayout) Get(output Output) OutputLayoutOutput {
 
 type OutputLayoutOutput struct {
 	p *C.struct_wlr_output_layout_output
+}
+
+func (o OutputLayoutOutput) Valid() bool {
+	return o.p != nil
 }
 
 func (o OutputLayoutOutput) X() int {
