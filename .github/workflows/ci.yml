@@ -83,6 +83,13 @@ jobs:
         with:
           go-version: ${{ matrix.go-version }}
 
+      # syms.go tracks the developer's xkbcommon; regenerate against the
+      # runner's headers so CGo matches libxkbcommon-dev on ubuntu-latest.
+      - name: Regenerate xkb keysyms
+        env:
+          CGO_ENABLED: '1'
+        run: go generate ./xkb/
+
       - name: Build
         env:
           CGO_ENABLED: '1'
