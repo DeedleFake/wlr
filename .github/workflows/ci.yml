@@ -124,6 +124,16 @@ jobs:
             -Dwerror=false
           ninja -C "$HOME/wlroots-src/build" install
 
+          # Generated wayland protocol headers are private build artifacts;
+          # public wlr/*.h includes them with quotes, so consumers need them
+          # on the wlroots include path. Meson does not install them.
+          inc="$HOME/wlroots/include/wlroots-${tag%.*}"
+          # Tag is 0.20.2 -> versioned include dir is wlroots-0.20.
+          inc="$(dirname "$(find "$HOME/wlroots/include" -type d -name wlr | head -n1)")"
+          cp "$HOME/wlroots-src/build/protocol/"*-protocol.h "$inc/"
+          # client headers are optional; copy if present for completeness.
+          cp "$HOME/wlroots-src/build/protocol/"*-client-protocol.h "$inc/" 2>/dev/null || true
+
           pc="$(find "$HOME/wlroots" -name 'wlroots*.pc' | head -n1)"
           if [ -z "$pc" ]; then
             echo "error: no wlroots*.pc under $HOME/wlroots" >&2
@@ -135,7 +145,8 @@ jobs:
           echo "PKG_CONFIG_PATH=$pcdir:$PKG_CONFIG_PATH" >> "$GITHUB_ENV"
           echo "LD_LIBRARY_PATH=$libdir:$LD_LIBRARY_PATH" >> "$GITHUB_ENV"
           echo "$HOME/wlroots/bin" >> "$GITHUB_PATH"
-          echo "Built wlroots $tag; pc=$pc"
+          echo "Built wlroots $tag; pc=$pc; protocols in $inc"
+          ls "$inc"/*layer-shell* || true
           PKG_CONFIG_PATH="$pcdir:$PKG_CONFIG_PATH" pkg-config --modversion "$(basename "$pc" .pc)"
           PKG_CONFIG_PATH="$pcdir:$PKG_CONFIG_PATH" pkg-config --cflags "$(basename "$pc" .pc)"
 
