@@ -1,7 +1,7 @@
 package wlr
 
 /*
-#cgo pkg-config: wlroots wayland-server pixman-1
+#cgo pkg-config: wlroots-0.20 wayland-server pixman-1
 #cgo CFLAGS: -D_GNU_SOURCE -DWLR_USE_UNSTABLE
 
 #include <stdarg.h>
@@ -12,7 +12,6 @@ package wlr
 #include <wlr/util/box.h>
 #include <wlr/types/wlr_compositor.h>
 #include <wlr/types/wlr_data_device.h>
-#include <wlr/types/wlr_matrix.h>
 #include <wlr/util/edges.h>
 #include <wlr/xwayland.h>
 */
@@ -36,44 +35,6 @@ const (
 	EdgeRight  Edges = C.WLR_EDGE_RIGHT
 )
 
-type Matrix [9]float32
-
-func matrixFromC(cm *[9]C.float) *Matrix {
-	var m Matrix
-	copyMatrix((*[9]float32)(&m), cm)
-	return &m
-}
-
-type number interface {
-	~float32 | ~float64 |
-		~int | ~int8 | ~int16 | ~int32 | ~int64 |
-		~uint | ~uint8 | ~uint16 | ~uint32 | ~uint64 | ~uintptr
-}
-
-func copyMatrix[Out, In number](out *[9]Out, in *[9]In) {
-	for i := range out {
-		out[i] = Out(in[i])
-	}
-}
-
-func ProjectBoxMatrix(box image.Rectangle, transform OutputTransform, rotation float32, projection *Matrix) *Matrix {
-	var cm [9]C.float
-	pm := projection.toC()
-	C.wlr_matrix_project_box(
-		&cm[0],
-		boxToC(box),
-		C.enum_wl_output_transform(transform),
-		C.float(rotation),
-		&pm[0],
-	)
-	return matrixFromC(&cm)
-}
-
-func (m *Matrix) toC() [9]C.float {
-	var cm [9]C.float
-	copyMatrix(&cm, (*[9]float32)(m))
-	return cm
-}
 
 type EventLoop struct {
 	p *C.struct_wl_event_loop

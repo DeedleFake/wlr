@@ -1,6 +1,7 @@
 package wlr
 
 /*
+#include <wlr/xcursor.h>
 #include <wlr/xwayland.h>
 */
 import "C"
@@ -43,7 +44,12 @@ func (x Xwayland) OnNewSurface(cb func(XwaylandSurface)) Listener {
 }
 
 func (x Xwayland) SetCursor(img XCursorImage) {
-	C.wlr_xwayland_set_cursor(x.p, img.p.buffer, img.p.width*4, img.p.width, img.p.height, C.int32_t(img.p.hotspot_x), C.int32_t(img.p.hotspot_y))
+	buf := C.wlr_xcursor_image_get_buffer(img.p)
+	C.wlr_xwayland_set_cursor(x.p, buf, C.int32_t(img.p.hotspot_x), C.int32_t(img.p.hotspot_y))
+}
+
+func (x Xwayland) DisplayName() string {
+	return C.GoString(x.p.display_name)
 }
 
 type XwaylandSurface struct {
@@ -86,8 +92,8 @@ func (s XwaylandSurface) SetMinimized(minimized bool) {
 	C.wlr_xwayland_surface_set_minimized(s.p, C.bool(minimized))
 }
 
-func (s XwaylandSurface) SetMaximized(maximized bool) {
-	C.wlr_xwayland_surface_set_maximized(s.p, C.bool(maximized))
+func (s XwaylandSurface) SetMaximized(maximizedHorz, maximizedVert bool) {
+	C.wlr_xwayland_surface_set_maximized(s.p, C.bool(maximizedHorz), C.bool(maximizedVert))
 }
 
 func (s XwaylandSurface) Configure(x int16, y int16, width uint16, height uint16) {

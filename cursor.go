@@ -87,7 +87,7 @@ func (c Cursor) OnButton(cb func(p Pointer, time time.Time, button CursorButton,
 	})
 }
 
-func (c Cursor) OnAxis(cb func(p Pointer, time time.Time, source AxisSource, orientation AxisOrientation, delta float64, deltaDiscrete int32)) Listener {
+func (c Cursor) OnAxis(cb func(p Pointer, time time.Time, source AxisSource, orientation AxisOrientation, delta float64, deltaDiscrete int32, relativeDirection AxisRelativeDirection)) Listener {
 	return newListener(&c.p.events.axis, func(lis Listener, data unsafe.Pointer) {
 		event := (*C.struct_wlr_pointer_axis_event)(data)
 		dev := Pointer{p: event.pointer}
@@ -98,6 +98,7 @@ func (c Cursor) OnAxis(cb func(p Pointer, time time.Time, source AxisSource, ori
 			AxisOrientation(event.orientation),
 			float64(event.delta),
 			int32(event.delta_discrete),
+			AxisRelativeDirection(event.relative_direction),
 		)
 	})
 }

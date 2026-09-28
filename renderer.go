@@ -6,8 +6,6 @@ package wlr
 import "C"
 
 import (
-	"image"
-	"image/color"
 	"unsafe"
 )
 
@@ -36,33 +34,4 @@ func (r Renderer) InitWLDisplay(display Display) {
 
 func (r Renderer) InitWLSHM(display Display) {
 	C.wlr_renderer_init_wl_shm(r.p, display.p)
-}
-
-func (r Renderer) Begin(output Output, width int, height int) {
-	C.wlr_renderer_begin(r.p, C.uint(width), C.uint(height))
-}
-
-func (r Renderer) Clear(c color.Color) {
-	cc := colorToC(c)
-	C.wlr_renderer_clear(r.p, &cc[0])
-}
-
-func (r Renderer) End() {
-	C.wlr_renderer_end(r.p)
-}
-
-func (r Renderer) RenderTextureWithMatrix(texture Texture, matrix *Matrix, alpha float32) {
-	m := matrix.toC()
-	C.wlr_render_texture_with_matrix(r.p, texture.p, &m[0], C.float(alpha))
-}
-
-func (r *Renderer) RenderRect(box image.Rectangle, c color.Color, projection *Matrix) {
-	cc := colorToC(c)
-	pm := projection.toC()
-	C.wlr_render_rect(
-		r.p,
-		boxToC(box),
-		&cc[0],
-		&pm[0],
-	)
 }
