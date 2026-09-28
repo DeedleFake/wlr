@@ -1,0 +1,94 @@
+name: ci
+
+on:
+  push:
+    branches: [master, ci, 'wlroots-*']
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        go-version: ['1.26.x', '1.27.x']
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            meson ninja-build pkg-config cmake \
+            libwayland-dev wayland-protocols \
+            libpixman-1-dev \
+            libinput-dev \
+            libseat-dev \
+            libdrm-dev \
+            libxkbcommon-dev \
+            libvulkan-dev glslang-tools \
+            libegl-dev libgles-dev libgbm-dev \
+            libdisplay-info-dev \
+            libliftoff-dev \
+            libudev-dev \
+            libxcb1-dev \
+            libxcb-composite0-dev \
+            libxcb-dri3-dev \
+            libxcb-ewmh-dev \
+            libxcb-icccm4-dev \
+            libxcb-present-dev \
+            libxcb-render0-dev \
+            libxcb-render-util0-dev \
+            libxcb-res0-dev \
+            libxcb-shm0-dev \
+            libxcb-xfixes0-dev \
+            libxcb-xinput-dev \
+            libx11-xcb-dev \
+            hwdata \
+            xwayland
+
+      - name: Read wlroots version pin
+        id: wlroots
+        run: echo "tag=$(tr -d '[:space:]' < .github/wlroots-version)" >> "$GITHUB_OUTPUT"
+
+      - name: Build wlroots from pinned tag
+        run: |
+          set -euo pipefail
+          tag="${{ steps.wlroots.outputs.tag }}"
+          git clone --depth 1 --branch "$tag" \
+            https://gitlab.freedesktop.org/wlroots/wlroots.git "$HOME/wlroots-src"
+          meson setup "$HOME/wlroots-src/build" "$HOME/wlroots-src" \
+            --prefix="$HOME/wlroots" \
+            -Dexamples=false \
+            -Dwerror=false
+          ninja -C "$HOME/wlroots-src/build" install
+          # Meson may install into lib/ or lib/<triplet>/ depending on the image.
+          pc="$(find "$HOME/wlroots" -name 'wlroots*.pc' | head -n1)"
+          if [ -z "$pc" ]; then
+            echo "error: no wlroots*.pc under $HOME/wlroots" >&2
+            find "$HOME/wlroots" -type f | head -n50 >&2
+            exit 1
+          fi
+          pcdir="$(dirname "$pc")"
+          libdir="$(dirname "$pcdir")"
+          echo "PKG_CONFIG_PATH=$pcdir" >> "$GITHUB_ENV"
+          echo "LD_LIBRARY_PATH=$libdir" >> "$GITHUB_ENV"
+          echo "Built wlroots $tag; pc=$pc"
+          PKG_CONFIG_PATH="$pcdir" pkg-config --modversion "$(basename "$pc" .pc)"
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ matrix.go-version }}
+
+      - name: Build
+        env:
+          CGO_ENABLED: '1'
+        run: go build ./...
+
+      - name: Vet
+        env:
+          CGO_ENABLED: '1'
+        run: go vet ./...
