@@ -59,8 +59,11 @@ jobs:
           tag="${{ steps.wlroots.outputs.tag }}"
           git clone --depth 1 --branch "$tag" \
             https://gitlab.freedesktop.org/wlroots/wlroots.git "$HOME/wlroots-src"
+          # Project defaults to wrap_mode=nodownload; allow wraps when the
+          # distro wayland (or other deps) is older than wlroots requires.
           meson setup "$HOME/wlroots-src/build" "$HOME/wlroots-src" \
             --prefix="$HOME/wlroots" \
+            -Dwrap_mode=default \
             -Dexamples=false \
             -Dwerror=false
           ninja -C "$HOME/wlroots-src/build" install
