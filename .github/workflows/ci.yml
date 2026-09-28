@@ -21,7 +21,8 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y \
-            meson ninja-build pkg-config cmake \
+            ninja-build pkg-config cmake \
+            python3-pip python3-setuptools python3-wheel \
             libwayland-dev wayland-protocols \
             libpixman-1-dev \
             libinput-dev \
@@ -48,6 +49,10 @@ jobs:
             libx11-xcb-dev \
             hwdata \
             xwayland
+          # ubuntu-latest's meson is too old for some wlroots wrap fallbacks
+          # (e.g. libxkbcommon HEAD wants >=1.4).
+          python3 -m pip install --user 'meson>=1.5'
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
 
       - name: Read wlroots version pin
         id: wlroots
@@ -56,11 +61,12 @@ jobs:
       - name: Build wlroots from pinned tag
         run: |
           set -euo pipefail
+          meson --version
           tag="${{ steps.wlroots.outputs.tag }}"
           git clone --depth 1 --branch "$tag" \
             https://gitlab.freedesktop.org/wlroots/wlroots.git "$HOME/wlroots-src"
           # Project defaults to wrap_mode=nodownload; allow wraps when the
-          # distro wayland (or other deps) is older than wlroots requires.
+          # distro wayland/libdrm/xkbcommon is older than wlroots requires.
           meson setup "$HOME/wlroots-src/build" "$HOME/wlroots-src" \
             --prefix="$HOME/wlroots" \
             -Dwrap_mode=default \
@@ -88,6 +94,8 @@ jobs:
 
       # syms.go tracks the developer's xkbcommon; regenerate against the
       # runner's headers so CGo matches libxkbcommon-dev on ubuntu-latest.
+      # When wlroots pulls a newer xkbcommon wrap, regenerating still matches
+      # whatever headers pkg-config exposes to CGo at build time.
       - name: Regenerate xkb keysyms
         env:
           CGO_ENABLED: '1'
