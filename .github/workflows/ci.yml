@@ -72,20 +72,28 @@ jobs:
             -Dwrap_mode=default \
             -Dexamples=false \
             -Dwerror=false
-          ninja -C "$HOME/wlroots-src/build" install
-          # Meson may install into lib/ or lib/<triplet>/ depending on the image.
-          pc="$(find "$HOME/wlroots" -name 'wlroots*.pc' | head -n1)"
+          ninja -C "$HOME/wlroots-src/build"
+          # Some wrap fallbacks (v4l via libdisplay-info) install udev data
+          # under absolute /usr paths; DESTDIR keeps that off the real root.
+          destdir="$HOME/wlroots-root"
+          DESTDIR="$destdir" ninja -C "$HOME/wlroots-src/build" install
+          staged="$destdir$HOME/wlroots"
+          pc="$(find "$staged" -name 'wlroots*.pc' | head -n1)"
           if [ -z "$pc" ]; then
-            echo "error: no wlroots*.pc under $HOME/wlroots" >&2
-            find "$HOME/wlroots" -type f | head -n50 >&2
+            echo "error: no wlroots*.pc under $staged" >&2
+            find "$staged" -type f | head -n50 >&2
             exit 1
           fi
           pcdir="$(dirname "$pc")"
-          libdir="$(dirname "$pcdir")"
-          echo "PKG_CONFIG_PATH=$pcdir" >> "$GITHUB_ENV"
-          echo "LD_LIBRARY_PATH=$libdir" >> "$GITHUB_ENV"
+          # Collect every pkgconfig dir and every lib dir under the stage.
+          pcpath="$(find "$staged" -type d -name pkgconfig | paste -sd: -)"
+          libpath="$(find "$staged" -type d \( -name lib -o -name 'lib*' \) | paste -sd: -)"
+          binpath="$staged/bin"
+          echo "PKG_CONFIG_PATH=$pcpath" >> "$GITHUB_ENV"
+          echo "LD_LIBRARY_PATH=$libpath" >> "$GITHUB_ENV"
+          echo "$binpath" >> "$GITHUB_PATH"
           echo "Built wlroots $tag; pc=$pc"
-          PKG_CONFIG_PATH="$pcdir" pkg-config --modversion "$(basename "$pc" .pc)"
+          PKG_CONFIG_PATH="$pcpath" pkg-config --modversion "$(basename "$pc" .pc)"
 
       - name: Setup Go
         uses: actions/setup-go@v5
@@ -93,9 +101,7 @@ jobs:
           go-version: ${{ matrix.go-version }}
 
       # syms.go tracks the developer's xkbcommon; regenerate against the
-      # runner's headers so CGo matches libxkbcommon-dev on ubuntu-latest.
-      # When wlroots pulls a newer xkbcommon wrap, regenerating still matches
-      # whatever headers pkg-config exposes to CGo at build time.
+      # headers exposed via PKG_CONFIG_PATH (distro or wrap-built).
       - name: Regenerate xkb keysyms
         env:
           CGO_ENABLED: '1'
