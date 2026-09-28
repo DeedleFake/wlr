@@ -79,11 +79,19 @@ func (s Seat) GetKeyboard() Keyboard {
 }
 
 func (s Seat) PointerNotifyButton(time time.Time, button CursorButton, state ButtonState) {
-	C.wlr_seat_pointer_notify_button(s.p, C.uint32_t(time.UnixMilli()), C.uint32_t(button), uint32(state))
+	C.wlr_seat_pointer_notify_button(s.p, C.uint32_t(time.UnixMilli()), C.uint32_t(button), C.enum_wl_pointer_button_state(state))
 }
 
-func (s Seat) PointerNotifyAxis(time time.Time, orientation AxisOrientation, delta float64, deltaDiscrete int32, source AxisSource) {
-	C.wlr_seat_pointer_notify_axis(s.p, C.uint32_t(time.UnixMilli()), C.enum_wlr_axis_orientation(orientation), C.double(delta), C.int32_t(deltaDiscrete), C.enum_wlr_axis_source(source))
+func (s Seat) PointerNotifyAxis(time time.Time, orientation AxisOrientation, delta float64, deltaDiscrete int32, source AxisSource, relativeDirection AxisRelativeDirection) {
+	C.wlr_seat_pointer_notify_axis(
+		s.p,
+		C.uint32_t(time.UnixMilli()),
+		C.enum_wl_pointer_axis(orientation),
+		C.double(delta),
+		C.int32_t(deltaDiscrete),
+		C.enum_wl_pointer_axis_source(source),
+		C.enum_wl_pointer_axis_relative_direction(relativeDirection),
+	)
 }
 
 func (s Seat) PointerNotifyEnter(surface Surface, sx float64, sy float64) {

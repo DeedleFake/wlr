@@ -72,6 +72,20 @@ func (s XDGShell) OnNewSurface(cb func(XDGSurface)) Listener {
 	})
 }
 
+// OnNewToplevel is emitted when an xdg_toplevel role is assigned.
+// Prefer this over OnNewSurface for managing toplevel windows.
+func (s XDGShell) OnNewToplevel(cb func(XDGToplevel)) Listener {
+	return newListener(&s.p.events.new_toplevel, func(lis Listener, data unsafe.Pointer) {
+		cb(XDGToplevel{p: (*C.struct_wlr_xdg_toplevel)(data)})
+	})
+}
+
+func (s XDGShell) OnNewPopup(cb func(XDGPopup)) Listener {
+	return newListener(&s.p.events.new_popup, func(lis Listener, data unsafe.Pointer) {
+		cb(XDGPopup{p: (*C.struct_wlr_xdg_popup)(data)})
+	})
+}
+
 type XDGSurface struct {
 	p *C.struct_wlr_xdg_surface
 }
@@ -186,9 +200,7 @@ func (s XDGSurface) OnNewPopup(cb func(XDGSurface, XDGPopup)) Listener {
 }
 
 func (s XDGSurface) GetGeometry() image.Rectangle {
-	var cb C.struct_wlr_box
-	C.wlr_xdg_surface_get_geometry(s.p, &cb)
-	return boxFromC(&cb)
+	return boxFromC(&s.p.geometry)
 }
 
 type XDGPopup struct {

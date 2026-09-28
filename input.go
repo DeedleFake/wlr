@@ -92,8 +92,12 @@ const (
 	InputDeviceTypeKeyboard   InputDeviceType = C.WLR_INPUT_DEVICE_KEYBOARD
 	InputDeviceTypePointer    InputDeviceType = C.WLR_INPUT_DEVICE_POINTER
 	InputDeviceTypeTouch      InputDeviceType = C.WLR_INPUT_DEVICE_TOUCH
-	InputDeviceTypeTabletTool InputDeviceType = C.WLR_INPUT_DEVICE_TABLET_TOOL
+	InputDeviceTypeTablet     InputDeviceType = C.WLR_INPUT_DEVICE_TABLET
 	InputDeviceTypeTabletPad  InputDeviceType = C.WLR_INPUT_DEVICE_TABLET_PAD
+	InputDeviceTypeSwitch     InputDeviceType = C.WLR_INPUT_DEVICE_SWITCH
+
+	// Deprecated: use InputDeviceTypeTablet.
+	InputDeviceTypeTabletTool = InputDeviceTypeTablet
 )
 
 type ButtonState uint32
@@ -106,25 +110,33 @@ const (
 type AxisSource uint32
 
 const (
-	AxisSourceWheel      AxisSource = C.WLR_AXIS_SOURCE_WHEEL
-	AxisSourceFinger     AxisSource = C.WLR_AXIS_SOURCE_FINGER
-	AxisSourceContinuous AxisSource = C.WLR_AXIS_SOURCE_CONTINUOUS
-	AxisSourceWheelTilt  AxisSource = C.WLR_AXIS_SOURCE_WHEEL_TILT
+	AxisSourceWheel      AxisSource = C.WL_POINTER_AXIS_SOURCE_WHEEL
+	AxisSourceFinger     AxisSource = C.WL_POINTER_AXIS_SOURCE_FINGER
+	AxisSourceContinuous AxisSource = C.WL_POINTER_AXIS_SOURCE_CONTINUOUS
+	AxisSourceWheelTilt  AxisSource = C.WL_POINTER_AXIS_SOURCE_WHEEL_TILT
 )
 
 type AxisOrientation uint32
 
 const (
-	AxisOrientationVertical   AxisOrientation = C.WLR_AXIS_ORIENTATION_VERTICAL
-	AxisOrientationHorizontal AxisOrientation = C.WLR_AXIS_ORIENTATION_HORIZONTAL
+	AxisOrientationVertical   AxisOrientation = C.WL_POINTER_AXIS_VERTICAL_SCROLL
+	AxisOrientationHorizontal AxisOrientation = C.WL_POINTER_AXIS_HORIZONTAL_SCROLL
+)
+
+type AxisRelativeDirection uint32
+
+const (
+	AxisRelativeDirectionIdentical AxisRelativeDirection = C.WL_POINTER_AXIS_RELATIVE_DIRECTION_IDENTICAL
+	AxisRelativeDirectionInverted  AxisRelativeDirection = C.WL_POINTER_AXIS_RELATIVE_DIRECTION_INVERTED
 )
 
 var inputDeviceNames = []string{
-	InputDeviceTypeKeyboard:   "keyboard",
-	InputDeviceTypePointer:    "pointer",
-	InputDeviceTypeTouch:      "touch",
-	InputDeviceTypeTabletTool: "tablet tool",
-	InputDeviceTypeTabletPad:  "tablet pad",
+	InputDeviceTypeKeyboard:  "keyboard",
+	InputDeviceTypePointer:   "pointer",
+	InputDeviceTypeTouch:     "touch",
+	InputDeviceTypeTablet:    "tablet",
+	InputDeviceTypeTabletPad: "tablet pad",
+	InputDeviceTypeSwitch:    "switch",
 }
 
 type InputDevice struct {
@@ -138,8 +150,6 @@ func (d InputDevice) OnDestroy(cb func(InputDevice)) Listener {
 }
 
 func (d InputDevice) Type() InputDeviceType { return InputDeviceType(d.p._type) }
-func (d InputDevice) Vendor() int           { return int(d.p.vendor) }
-func (d InputDevice) Product() int          { return int(d.p.product) }
 func (d InputDevice) Name() string          { return C.GoString(d.p.name) }
 
 func (d InputDevice) Keyboard() Keyboard {

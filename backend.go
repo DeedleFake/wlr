@@ -17,8 +17,8 @@ type Backend struct {
 	p *C.struct_wlr_backend
 }
 
-func AutocreateBackend(display Display) Backend {
-	p := C.wlr_backend_autocreate(display.p, nil)
+func AutocreateBackend(loop EventLoop) Backend {
+	p := C.wlr_backend_autocreate(loop.p, nil)
 	return Backend{p: p}
 }
 
