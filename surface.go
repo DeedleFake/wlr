@@ -72,6 +72,12 @@ func (s Surface) OnUnmap(cb func(Surface)) Listener {
 	})
 }
 
+func (s Surface) OnCommit(cb func(Surface)) Listener {
+	return newListener(&s.p.events.commit, func(lis Listener, data unsafe.Pointer) {
+		cb(s)
+	})
+}
+
 func (s Surface) OnDestroy(cb func(Surface)) Listener {
 	return newListener(&s.p.events.destroy, func(lis Listener, data unsafe.Pointer) {
 		cb(s)

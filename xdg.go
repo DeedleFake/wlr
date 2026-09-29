@@ -122,6 +122,19 @@ func (s XDGSurface) HasSurface(sub Surface) bool {
 	return C._wlr_xdg_surface_has_surface(s.p, sub.p) != 0
 }
 
+// Initialized returns true once the client has made its initial
+// commit. Configure events, including those sent by setting toplevel
+// state, can't be sent before that.
+func (s XDGSurface) Initialized() bool {
+	return bool(s.p.initialized)
+}
+
+// InitialCommit returns true if the commit currently being handled is
+// the surface's initial commit.
+func (s XDGSurface) InitialCommit() bool {
+	return bool(s.p.initial_commit)
+}
+
 func (s XDGSurface) Role() XDGSurfaceRole {
 	return XDGSurfaceRole(s.p.role)
 }
