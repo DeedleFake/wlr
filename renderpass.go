@@ -3,8 +3,12 @@ package wlr
 /*
 #include <wlr/render/pass.h>
 
-// options can't hold a Go pointer when it's passed to C, so alpha is
-// pointed to from here instead.
+// cgo lets Go pass a pointer to Go memory into C only if that memory
+// holds no unpinned Go pointers. options is Go memory, so pointing
+// options->alpha at a Go variable makes the cgo pointer check panic.
+// Taking alpha by value and pointing at the C parameter avoids that.
+// The pointer only has to outlive the call: every renderer reads alpha
+// during wlr_render_pass_add_texture and doesn't keep options.
 static inline void _wlr_render_pass_add_texture(struct wlr_render_pass *pass, struct wlr_render_texture_options *options, float alpha) {
 	options->alpha = &alpha;
 	wlr_render_pass_add_texture(pass, options);
