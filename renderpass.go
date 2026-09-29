@@ -2,6 +2,13 @@ package wlr
 
 /*
 #include <wlr/render/pass.h>
+
+// options can't hold a Go pointer when it's passed to C, so alpha is
+// pointed to from here instead.
+static inline void _wlr_render_pass_add_texture(struct wlr_render_pass *pass, struct wlr_render_texture_options *options, float alpha) {
+	options->alpha = &alpha;
+	wlr_render_pass_add_texture(pass, options);
+}
 */
 import "C"
 
@@ -37,7 +44,6 @@ func (r RenderPass) Submit() bool {
 }
 
 func (r RenderPass) AddTexture(texture Texture, srcBox image.Rectangle, dstBox image.Rectangle, alpha float32, transform OutputTransform, filterMode FilterMode, blendMode BlendMode) {
-	var alphaC C.float = C.float(alpha)
 	var options C.struct_wlr_render_texture_options
 	options.texture = texture.p
 	if srcBox != (image.Rectangle{}) {
@@ -46,11 +52,10 @@ func (r RenderPass) AddTexture(texture Texture, srcBox image.Rectangle, dstBox i
 	if dst := boxToC(dstBox); dst != nil {
 		options.dst_box = *dst
 	}
-	options.alpha = &alphaC
 	options.transform = C.enum_wl_output_transform(transform)
 	options.filter_mode = C.enum_wlr_scale_filter_mode(filterMode)
 	options.blend_mode = C.enum_wlr_render_blend_mode(blendMode)
-	C.wlr_render_pass_add_texture(r.p, &options)
+	C._wlr_render_pass_add_texture(r.p, &options, C.float(alpha))
 }
 
 func (r RenderPass) AddRect(box image.Rectangle, c color.Color, blendMode BlendMode) {
