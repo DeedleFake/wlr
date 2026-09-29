@@ -72,6 +72,10 @@ func (s XwaylandSurface) Title() string {
 	return C.GoString(s.p.title)
 }
 
+func (s XwaylandSurface) PID() int {
+	return int(s.p.pid)
+}
+
 func (s XwaylandSurface) Decorations() XwaylandSurfaceDecorations {
 	return XwaylandSurfaceDecorations(s.p.decorations)
 }
