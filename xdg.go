@@ -215,6 +215,15 @@ type XDGToplevel struct {
 	p *C.struct_wlr_xdg_toplevel
 }
 
+// OnDestroy is called when the toplevel role object is destroyed. This
+// happens before the base XDGSurface's destroy event, and listeners on
+// the toplevel must be removed by then.
+func (t XDGToplevel) OnDestroy(cb func(XDGToplevel)) Listener {
+	return newListener(&t.p.events.destroy, func(lis Listener, data unsafe.Pointer) {
+		cb(t)
+	})
+}
+
 func (t XDGToplevel) OnRequestMove(cb func(t XDGToplevel, client SeatClient, serial uint32)) Listener {
 	return newListener(&t.p.events.request_move, func(lis Listener, data unsafe.Pointer) {
 		event := (*C.struct_wlr_xdg_toplevel_move_event)(data)
