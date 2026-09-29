@@ -106,6 +106,24 @@ func (s XwaylandSurface) OnDestroy(cb func(XwaylandSurface)) Listener {
 	})
 }
 
+// OnAssociate is called when the X11 window is paired with a
+// wlr_surface. Surface returns an invalid Surface until then, so
+// listeners on the Surface, such as OnMap, should be added here.
+func (s XwaylandSurface) OnAssociate(cb func(XwaylandSurface)) Listener {
+	return newListener(&s.p.events.associate, func(lis Listener, data unsafe.Pointer) {
+		cb(s)
+	})
+}
+
+// OnDissociate is called when the X11 window is about to lose its
+// wlr_surface. Listeners added to the Surface in OnAssociate should be
+// removed here.
+func (s XwaylandSurface) OnDissociate(cb func(XwaylandSurface)) Listener {
+	return newListener(&s.p.events.dissociate, func(lis Listener, data unsafe.Pointer) {
+		cb(s)
+	})
+}
+
 func (s XwaylandSurface) OnRequestMove(cb func(surface XwaylandSurface)) Listener {
 	return newListener(&s.p.events.request_move, func(lis Listener, data unsafe.Pointer) {
 		cb(s)

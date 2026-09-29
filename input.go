@@ -38,6 +38,10 @@ type Keyboard struct {
 	p *C.struct_wlr_keyboard
 }
 
+func (k Keyboard) Valid() bool {
+	return k.p != nil
+}
+
 func (k Keyboard) Base() InputDevice {
 	return InputDevice{p: &k.p.base}
 }
