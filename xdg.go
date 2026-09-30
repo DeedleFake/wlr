@@ -181,6 +181,10 @@ func (s XDGSurface) Ping() {
 	C.wlr_xdg_surface_ping(s.p)
 }
 
+func (s XDGSurface) ScheduleConfigure() uint32 {
+	return uint32(C.wlr_xdg_surface_schedule_configure(s.p))
+}
+
 func (s XDGSurface) Surface() Surface {
 	return Surface{p: s.p.surface}
 }
