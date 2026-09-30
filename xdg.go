@@ -161,8 +161,8 @@ func (s XDGToplevel) SetResizing(resizing bool) {
 	C.wlr_xdg_toplevel_set_resizing(s.p, C.bool(resizing))
 }
 
-func (s XDGToplevel) SetSize(width int32, height int32) {
-	C.wlr_xdg_toplevel_set_size(s.p, C.int32_t(width), C.int32_t(height))
+func (s XDGToplevel) SetSize(width int32, height int32) uint32 {
+	return uint32(C.wlr_xdg_toplevel_set_size(s.p, C.int32_t(width), C.int32_t(height)))
 }
 
 func (s XDGToplevel) SetTiled(edges Edges) {
@@ -344,4 +344,8 @@ type XDGSurfaceState struct {
 
 func (s XDGSurfaceState) Geometry() image.Rectangle {
 	return boxFromC(&s.v.geometry)
+}
+
+func (s XDGSurfaceState) ConfigureSerial() uint32 {
+	return uint32(s.v.configure_serial)
 }
