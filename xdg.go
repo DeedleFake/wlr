@@ -228,6 +228,20 @@ func (p XDGPopup) Parent() Surface {
 	return Surface{p: p.p.parent}
 }
 
+// UnconstrainFromBox sets the popup's geometry so that it stays inside
+// box, following its positioner's constraint adjustments, and
+// schedules a configure. The box is in the coordinate system of the
+// popup's root toplevel surface.
+func (p XDGPopup) UnconstrainFromBox(box image.Rectangle) {
+	box = box.Canon()
+	C.wlr_xdg_popup_unconstrain_from_box(p.p, &C.struct_wlr_box{
+		x:      C.int(box.Min.X),
+		y:      C.int(box.Min.Y),
+		width:  C.int(box.Dx()),
+		height: C.int(box.Dy()),
+	})
+}
+
 type XDGToplevel struct {
 	p *C.struct_wlr_xdg_toplevel
 }
