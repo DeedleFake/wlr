@@ -2,10 +2,24 @@ package wlr
 
 /*
 #include <wlr/types/wlr_layer_shell_v1.h>
+
+void _wlr_surface_for_each_cb(struct wlr_surface *surface, int sx, int sy, void *data);
+
+static inline void _wlr_layer_surface_v1_for_each_surface(struct wlr_layer_surface_v1 *surface, void *user_data) {
+	wlr_layer_surface_v1_for_each_surface(surface, _wlr_surface_for_each_cb, user_data);
+}
+
+static inline void _wlr_layer_surface_v1_for_each_popup_surface(struct wlr_layer_surface_v1 *surface, void *user_data) {
+	wlr_layer_surface_v1_for_each_popup_surface(surface, _wlr_surface_for_each_cb, user_data);
+}
 */
 import "C"
 
-import "unsafe"
+import (
+	"iter"
+	"runtime/cgo"
+	"unsafe"
+)
 
 type LayerShellV1 struct {
 	p *C.struct_wlr_layer_shell_v1
@@ -95,6 +109,57 @@ func (s LayerSurfaceV1) OnDestroy(cb func(LayerSurfaceV1)) Listener {
 	return newListener(&s.p.events.destroy, func(lis Listener, data unsafe.Pointer) {
 		cb(s)
 	})
+}
+
+// ForEachSurface calls cb for the surface's mapped subsurfaces and
+// popups, with their positions relative to the layer surface.
+func (s LayerSurfaceV1) ForEachSurface(cb func(Surface, int, int)) {
+	handle := cgo.NewHandle(cb)
+	defer handle.Delete()
+
+	C._wlr_layer_surface_v1_for_each_surface(s.p, unsafe.Pointer(&handle))
+}
+
+func (s LayerSurfaceV1) Surfaces() iter.Seq[IterSurface] {
+	return func(yield func(IterSurface) bool) {
+		ok := true
+		s.ForEachSurface(func(s Surface, sx, sy int) {
+			if !ok {
+				return
+			}
+
+			ok = yield(IterSurface{s, sx, sy})
+		})
+	}
+}
+
+// ForEachPopupSurface calls cb for the surfaces of the layer surface's
+// popups and their subsurfaces, from root to leaves, with their
+// positions relative to the layer surface.
+func (s LayerSurfaceV1) ForEachPopupSurface(cb func(Surface, int, int)) {
+	handle := cgo.NewHandle(cb)
+	defer handle.Delete()
+
+	C._wlr_layer_surface_v1_for_each_popup_surface(s.p, unsafe.Pointer(&handle))
+}
+
+func (s LayerSurfaceV1) PopupSurfaces() iter.Seq[IterSurface] {
+	return func(yield func(IterSurface) bool) {
+		ok := true
+		s.ForEachPopupSurface(func(s Surface, sx, sy int) {
+			if !ok {
+				return
+			}
+
+			ok = yield(IterSurface{s, sx, sy})
+		})
+	}
+}
+
+func (s LayerSurfaceV1) PopupSurfaceAt(sx float64, sy float64) (surface Surface, subX float64, subY float64, ok bool) {
+	var csubX, csubY C.double
+	p := C.wlr_layer_surface_v1_popup_surface_at(s.p, C.double(sx), C.double(sy), &csubX, &csubY)
+	return Surface{p: p}, float64(csubX), float64(csubY), p != nil
 }
 
 type LayerSurfaceV1State struct {
