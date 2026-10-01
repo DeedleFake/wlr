@@ -155,6 +155,10 @@ func (s Seat) KeyboardNotifyEnter(surface Surface, keycodes []uint32, modifiers 
 	C.wlr_seat_keyboard_notify_enter(s.p, surface.p, kc, C.size_t(len(keycodes)), modifiers.p)
 }
 
+func (s Seat) KeyboardNotifyClearFocus() {
+	C.wlr_seat_keyboard_notify_clear_focus(s.p)
+}
+
 func (s Seat) KeyboardNotifyModifiers(modifiers KeyboardModifiers) {
 	C.wlr_seat_keyboard_notify_modifiers(s.p, modifiers.p)
 }
