@@ -176,6 +176,10 @@ func (s Seat) Keyboard() Keyboard {
 	return Keyboard{p: p}
 }
 
+func (s Seat) Valid() bool {
+	return s.p != nil
+}
+
 func (s Seat) KeyboardState() SeatKeyboardState {
 	return SeatKeyboardState{s: s.p.keyboard_state}
 }
