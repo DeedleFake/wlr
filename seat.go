@@ -3,6 +3,8 @@ package wlr
 /*
 #include <stdlib.h>
 #include <wlr/types/wlr_seat.h>
+#include <wlr/types/wlr_data_device.h>
+#include <wlr/types/wlr_primary_selection.h>
 */
 import "C"
 
@@ -59,6 +61,44 @@ func (s Seat) OnRequestSetCursor(cb func(client SeatClient, surface Surface, ser
 		surface := Surface{p: event.surface}
 		cb(client, surface, uint32(event.serial), int32(event.hotspot_x), int32(event.hotspot_y))
 	})
+}
+
+// DataSource is the source of a clipboard selection or a drag.
+type DataSource struct {
+	p *C.struct_wlr_data_source
+}
+
+// PrimarySelectionSource is the source of a primary selection.
+type PrimarySelectionSource struct {
+	p *C.struct_wlr_primary_selection_source
+}
+
+// OnRequestSetSelection is called when a client, including Xwayland,
+// wants to set the clipboard selection. The selection only changes if
+// the compositor calls SetSelection.
+func (s Seat) OnRequestSetSelection(cb func(source DataSource, serial uint32)) Listener {
+	return newListener(&s.p.events.request_set_selection, func(lis Listener, data unsafe.Pointer) {
+		event := (*C.struct_wlr_seat_request_set_selection_event)(data)
+		cb(DataSource{p: event.source}, uint32(event.serial))
+	})
+}
+
+func (s Seat) SetSelection(source DataSource, serial uint32) {
+	C.wlr_seat_set_selection(s.p, source.p, C.uint32_t(serial))
+}
+
+// OnRequestSetPrimarySelection is called when a client, including
+// Xwayland, wants to set the primary selection. The selection only
+// changes if the compositor calls SetPrimarySelection.
+func (s Seat) OnRequestSetPrimarySelection(cb func(source PrimarySelectionSource, serial uint32)) Listener {
+	return newListener(&s.p.events.request_set_primary_selection, func(lis Listener, data unsafe.Pointer) {
+		event := (*C.struct_wlr_seat_request_set_primary_selection_event)(data)
+		cb(PrimarySelectionSource{p: event.source}, uint32(event.serial))
+	})
+}
+
+func (s Seat) SetPrimarySelection(source PrimarySelectionSource, serial uint32) {
+	C.wlr_seat_set_primary_selection(s.p, source.p, C.uint32_t(serial))
 }
 
 func (s Seat) Capabilities() SeatCapability {
