@@ -48,6 +48,12 @@ func (x Xwayland) SetCursor(img XCursorImage) {
 	C.wlr_xwayland_set_cursor(x.p, buf, C.int32_t(img.p.hotspot_x), C.int32_t(img.p.hotspot_y))
 }
 
+// SetSeat sets the seat that Xwayland uses for selections such as
+// the clipboard. It can be called before Xwayland is ready.
+func (x Xwayland) SetSeat(seat Seat) {
+	C.wlr_xwayland_set_seat(x.p, seat.p)
+}
+
 func (x Xwayland) DisplayName() string {
 	return C.GoString(x.p.display_name)
 }
